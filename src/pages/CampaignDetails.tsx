@@ -73,7 +73,7 @@ export default function CampaignDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6">
-              <h3 className="font-display text-xl font-semibold mb-4">About this campaign</h3>
+              <h3 className="font-display text-xl font-semibold mb-4">About this blog</h3>
               <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
                 {campaign.description}
               </p>
