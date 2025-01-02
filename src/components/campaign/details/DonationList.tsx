@@ -37,9 +37,9 @@ export default function DonationList({ donations }: DonationListProps) {
                   <p className="font-medium text-sm">
                     {`${donation.address.slice(0, 6)}...${donation.address.slice(-4)}`}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {/* <p className="text-xs text-gray-500 dark:text-gray-400">
                     {formatDistanceToNow(donation.timestamp, { addSuffix: true })}
-                  </p>
+                  </p> */}
                 </div>
               </div>
               <p className="font-display font-semibold text-blue-600 dark:text-blue-400">
