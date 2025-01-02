@@ -40,7 +40,7 @@ export default function StatsCard({ campaigns }: StatsCardProps) {
           <div>
             <p className="text-sm text-gray-500 dark:text-gray-400">Total Raised</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {totalRaised.toFixed(2)} ETH
+            {(totalRaised / 10 ** 18).toFixed(6)} ETH
             </p>
           </div>
         </div>
