@@ -16,7 +16,7 @@ interface DonationListProps {
 export default function DonationList({ donations }: DonationListProps) {
   return (
     <div className="space-y-4">
-      <h3 className="font-display text-xl font-semibold">Recent Donations</h3>
+      <h3 className="font-display text-xl font-semibold dark:text-blue-400">Recent Donations</h3>
       
       <div className="space-y-3">
         {donations.length === 0 ? (
@@ -34,7 +34,7 @@ export default function DonationList({ donations }: DonationListProps) {
                   <User className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm">
+                  <p className="font-medium text-sm dark:text-blue-400">
                     {`${donation.address.slice(0, 6)}...${donation.address.slice(-4)}`}
                   </p>
                   {/* <p className="text-xs text-gray-500 dark:text-gray-400">

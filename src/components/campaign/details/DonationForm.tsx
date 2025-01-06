@@ -30,7 +30,7 @@ export default function DonationForm({ campaignId, onDonate }: DonationFormProps
 
   return (
     <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 space-y-4">
-      <h3 className="font-display text-xl font-semibold">Support this blog</h3>
+      <h3 className="font-display text-xl font-semibold dark:text-blue-400">Support this blog</h3>
       
       {account ? (
         <form onSubmit={handleSubmit} className="space-y-4">

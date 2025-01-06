@@ -33,7 +33,7 @@ export default function CampaignHeader({ campaign }: CampaignHeaderProps) {
             </div>
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Target</p>
-              <p className="font-display font-semibold">{formatEther(campaign.target)} ETH</p>
+              <p className="font-display font-semibold dark:text-blue-400">{formatEther(campaign.target)} ETH</p>
             </div>
           </div>
           
@@ -43,7 +43,7 @@ export default function CampaignHeader({ campaign }: CampaignHeaderProps) {
             </div>
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Backers</p>
-              <p className="font-display font-semibold">{campaign.donators.length}</p>
+              <p className="font-display font-semibold dark:text-purple-400">{campaign.donators.length}</p>
             </div>
           </div>
           
@@ -53,7 +53,7 @@ export default function CampaignHeader({ campaign }: CampaignHeaderProps) {
             </div>
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">End Date</p>
-              <p className="font-display font-semibold">
+              <p className="font-display font-semibold dark:text-green-400">
                 {format(Number(campaign.deadline) * 1000, 'MMM dd, yyyy')}
               </p>
             </div>

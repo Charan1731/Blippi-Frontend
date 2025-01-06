@@ -17,8 +17,8 @@ export default function WalletButton({ onProfileClick }: WalletButtonProps) {
           className="flex items-center space-x-2 bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
           title={account}
         >
-          <Wallet className="w-4 h-4" />
-          <span>{`${account.slice(0, 6)}...${account.slice(-4)}`}</span>
+          <Wallet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          <span className='dark:text-white'>{`${account.slice(0, 6)}...${account.slice(-4)}`}</span>
         </button>
         <button
           onClick={disconnectWallet}

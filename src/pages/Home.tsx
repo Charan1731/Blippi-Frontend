@@ -64,8 +64,8 @@ export default function Home() {
           return Number(b.amountCollected) - Number(a.amountCollected);
         case 'leastFunded':
           return Number(a.amountCollected) - Number(b.amountCollected);
-        default: // newest
-          return Number(b.deadline) - Number(a.deadline);
+        // default: // newest
+        //   return Number(b.deadline) - Number(a.deadline);
       }
     });
 
