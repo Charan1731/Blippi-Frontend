@@ -8,7 +8,9 @@ import SearchBar from '../components/SearchBar';
 import Footer from '../components/Footer';
 import FadeIn from '../components/FadeIn';
 import { useSearch } from '../hooks/useSearch';
+import blockchainanimation from '../assets/blockchain.json'
 import type { Campaign, CampaignStatus, SortOption } from '../types/campaign';
+import Lottie from 'lottie-react';
 
 export default function Home() {
   const { provider } = useWeb3();
@@ -74,11 +76,23 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <h1 className='heading text-xl text-blue-600 dark:text-blue-400'>
-          Please Connect to a Metamask wallet and Enable test network and Choose Sepolia as Testnet to view the blogs
-        </h1>
-      </div>
+      <main className="w-full md:px-10 py-5 min-h-screen p-5 mt-20 bg-gradient-to-b from-blue-300 to-white">
+  <div className="flex flex-col justify-center items-center mt-28 space-y-10 h-64">
+    {/* Lottie Animation */}
+    <Lottie
+      animationData={blockchainanimation}
+      loop={true}
+      autoplay={true}
+      style={{ height: 500, width: 500 }}
+      className="mt-10"
+    />
+
+    {/* Heading */}
+    <h1 className="heading text-center text-2xl text-black font-bold px-5">
+      Connect your Metamask wallet, enable the test network, and select Sepolia to view the blogs.
+    </h1>
+  </div>
+</main>
     );
   }
 
