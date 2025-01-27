@@ -28,7 +28,7 @@ export default function BlogGrid({ campaigns }: BlogGridProps) {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <FadeIn>
         <div className="flex justify-between items-center mb-8">
-          <h2 className="font-serif text-3xl font-bold text-gray-900 dark:text-white">
+          <h2 className="font-sans text-3xl font-bold text-gray-900 dark:text-white">
             Latest Stories
           </h2>
           <div className="relative">

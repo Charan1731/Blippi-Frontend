@@ -78,7 +78,6 @@ export default function Home() {
     return (
       <main className="w-full md:px-10 py-5 min-h-screen p-5 mt-20 bg-gradient-to-b from-blue-300 to-white">
   <div className="flex flex-col justify-center items-center mt-28 space-y-10 h-64">
-    {/* Lottie Animation */}
     <Lottie
       animationData={blockchainanimation}
       loop={true}
@@ -86,8 +85,6 @@ export default function Home() {
       style={{ height: 500, width: 500 }}
       className="mt-10"
     />
-
-    {/* Heading */}
     <h1 className="heading text-center text-2xl text-black font-bold px-5">
       Connect your Metamask wallet, enable the test network, and select Sepolia to view the blogs.
     </h1>

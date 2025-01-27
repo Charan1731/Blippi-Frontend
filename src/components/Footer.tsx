@@ -9,7 +9,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <FadeIn delay={100}>
             <div>
-              <h3 className="font-serif text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              <h3 className="font-sans text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Subscribe to our newsletter
               </h3>
               <form className="space-y-4">
@@ -26,7 +26,7 @@ export default function Footer() {
           </FadeIn>
           <FadeIn delay={200}>
             <div>
-              <h3 className="font-serif text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              <h3 className="font-sans text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Quick Links
               </h3>
               <ul className="space-y-2 text-gray-600 dark:text-gray-300">
@@ -39,7 +39,7 @@ export default function Footer() {
           </FadeIn>
           <FadeIn delay={300}>
             <div>
-              <h3 className="font-serif text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              <h3 className="font-sans text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Categories
               </h3>
               <ul className="space-y-2 text-gray-600 dark:text-gray-300">
@@ -52,7 +52,7 @@ export default function Footer() {
           </FadeIn>
           <FadeIn delay={400}>
             <div>
-              <h3 className="font-serif text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              <h3 className="font-sans text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Follow Us
               </h3>
               <div className="flex space-x-4">
@@ -65,7 +65,7 @@ export default function Footer() {
                 <a href="https://www.linkedin.com/in/charandeep-reddy-2640a4301/" target='_blank' className="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
                   <Linkedin className="w-5 h-5" />
                 </a>
-                <a href="#" className="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
+                <a href="mailto:charan23114@gmail.com" target='_blank' className="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
                   <Mail className="w-5 h-5" />
                 </a>
               </div>

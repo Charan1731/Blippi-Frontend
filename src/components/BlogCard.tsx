@@ -35,7 +35,7 @@ export default function BlogCard({ campaign, index }: BlogCardProps) {
           </div>
         </div>
         
-        <h3 className="font-serif text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+        <h3 className="font-sans text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
           {campaign.title}
         </h3>
         <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">

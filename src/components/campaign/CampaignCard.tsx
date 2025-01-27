@@ -38,7 +38,7 @@ export default function CampaignCard({ campaign, index }: CampaignCardProps) {
           </div>
         </div>
         
-        <h3 className="font-serif text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-1">
+        <h3 className="font-sans text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-1">
           {campaign.title}
         </h3>
         
