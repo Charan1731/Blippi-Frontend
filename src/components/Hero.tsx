@@ -14,7 +14,7 @@ export default function Hero() {
       <div className="absolute inset-0 bg-grid-gray-100/50 dark:bg-grid-gray-900/50" />
       <div className="relative max-w-5xl mx-auto px-4 pt-20 pb-24 sm:px-6 lg:px-8 text-center">
         <FadeIn delay={200}>
-          <h1 className="font-sans text-5xl sm:text-6xl mt-20 lg:text-7xl font-bold text-blue-600 dark:text-white mb-6">
+          <h1 className="font-sans text-5xl sm:text-6xl mt-20 lg:text-7xl font-bold text-blue-600 dark:text-blue-600 mb-6">
           The home for web3 publishing
           </h1>
         </FadeIn>
