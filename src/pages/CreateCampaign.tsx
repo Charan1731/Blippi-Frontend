@@ -6,7 +6,17 @@ import { parseEther } from 'ethers';
 import FloatingInput from '../components/forms/FloatingInput';
 import FloatingTextarea from '../components/forms/FloatingTextarea';
 import CampaignPreview from '../components/campaign/CampaignPreview';
-import type { CampaignFormData } from '../types/campaign';
+
+// Define proper types
+interface CampaignFormData {
+  title: string;
+  description: string;
+  target: string;
+  deadline: string;
+  image: string;
+}
+
+const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent';
 
 export default function CreateCampaign() {
   const navigate = useNavigate();
@@ -20,42 +30,128 @@ export default function CreateCampaign() {
     deadline: '',
     image: '',
   });
+  const [contentError, setContentError] = useState('');
+
+  const validateForm = (): boolean => {
+    const newErrors: Partial<Record<keyof CampaignFormData, string>> = {};
+    
+    if (!formData.title.trim()) newErrors.title = 'Title is required';
+    if (!formData.description.trim()) newErrors.description = 'Description is required';
+    if (!formData.target || parseFloat(formData.target) <= 0) {
+      newErrors.target = 'Please enter a valid target amount';
+    }
+    if (!formData.deadline) {
+      newErrors.deadline = 'End date is required';
+    } else {
+      const deadlineDate = new Date(formData.deadline);
+      const today = new Date();
+      if (deadlineDate <= today) {
+        newErrors.deadline = 'End date must be in the future';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const analyzeContent = async (text: string): Promise<boolean> => {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('Gemini API key is not configured');
+    }
+
+    try {
+      const response = await fetch(`${GEMINI_API_ENDPOINT}?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Analyze the following text for inappropriate, spammy, or harmful content, including but not limited to hate speech, explicit material, threats, misinformation, scams, or any other form of harmful communication. Return "true" if the content is appropriate and "false" if it is inappropriate.
+
+Text: ${text}
+
+Return only "true" or "false" with no additional explanation.`
+            }]
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim().toLowerCase() === 'true';
+    } catch (error) {
+      console.error('Content analysis failed:', error);
+      throw new Error('Failed to analyze content');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!account || !signer) return;
+    
+    if (!account || !signer) {
+      setContentError('Please connect your wallet first');
+      return;
+    }
 
-    const newErrors: Partial<Record<keyof CampaignFormData, string>> = {};
-    if (!formData.title) newErrors.title = 'Title is required';
-    if (!formData.description) newErrors.description = 'Description is required';
-    if (!formData.target) newErrors.target = 'Target amount is required';
-    if (!formData.deadline) newErrors.deadline = 'End date is required';
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+    if (!validateForm()) {
       return;
     }
 
     try {
       setLoading(true);
+      setContentError('');
+
+      // Analyze content
+      const [isTitleAppropriate, isDescriptionAppropriate] = await Promise.all([
+        analyzeContent(formData.title),
+        analyzeContent(formData.description)
+      ]);
+
+      if (!isTitleAppropriate || !isDescriptionAppropriate) {
+        setContentError('Your content contains inappropriate material. Please revise it.');
+        return;
+      }
+
       const contract = getContract(signer, signer);
-      const deadline = new Date(formData.deadline).getTime() / 1000;
+      const deadline = Math.floor(new Date(formData.deadline).getTime() / 1000);
       
       const tx = await contract.createCampaign(
         account,
-        formData.title,
-        formData.description,
+        formData.title.trim(),
+        formData.description.trim(),
         parseEther(formData.target),
         BigInt(deadline),
-        formData.image
+        formData.image.trim()
       );
 
       await tx.wait();
       navigate('/');
     } catch (error) {
       console.error('Error creating campaign:', error);
+      setContentError(
+        error instanceof Error 
+          ? error.message 
+          : 'Failed to create campaign. Please try again.'
+      );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({ ...prev, [id]: value }));
+    // Clear error when user starts typing
+    if (errors[id as keyof CampaignFormData]) {
+      setErrors(prev => ({ ...prev, [id]: '' }));
     }
   };
 
@@ -66,7 +162,7 @@ export default function CreateCampaign() {
           <div className="space-y-8">
             <div>
               <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-                Create Blog
+                Create Campaign
               </h1>
               <p className="mt-2 text-gray-600 dark:text-gray-300">
                 Share your story and start raising funds for your cause.
@@ -77,27 +173,30 @@ export default function CreateCampaign() {
               <FloatingInput
                 id="title"
                 type="text"
-                label="Blog Title"
+                label="Campaign Title"
                 value={formData.title}
-                onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                onChange={handleInputChange}
                 error={errors.title}
+                maxLength={100}
               />
 
               <FloatingTextarea
                 id="description"
-                label="Blog Description"
+                label="Campaign Description"
                 value={formData.description}
-                onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={handleInputChange}
                 error={errors.description}
+                maxLength={2000}
               />
 
               <FloatingInput
                 id="target"
                 type="number"
                 step="0.01"
+                min="0"
                 label="Target Amount (ETH)"
                 value={formData.target}
-                onChange={e => setFormData(prev => ({ ...prev, target: e.target.value }))}
+                onChange={handleInputChange}
                 error={errors.target}
               />
 
@@ -107,7 +206,7 @@ export default function CreateCampaign() {
                 label="End Date"
                 min={new Date().toISOString().split('T')[0]}
                 value={formData.deadline}
-                onChange={e => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
+                onChange={handleInputChange}
                 error={errors.deadline}
               />
 
@@ -116,8 +215,15 @@ export default function CreateCampaign() {
                 type="url"
                 label="Campaign Image URL"
                 value={formData.image}
-                onChange={e => setFormData(prev => ({ ...prev, image: e.target.value }))}
+                onChange={handleInputChange}
+                placeholder="https://example.com/image.jpg"
               />
+
+              {contentError && (
+                <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+                  {contentError}
+                </div>
+              )}
 
               <button
                 type="submit"
@@ -135,7 +241,7 @@ export default function CreateCampaign() {
                 {loading ? (
                   <div className="flex items-center justify-center">
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    Creating...
+                    Creating Campaign...
                   </div>
                 ) : (
                   'Create Campaign'
