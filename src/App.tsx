@@ -7,6 +7,8 @@ import Home from './pages/Home';
 import CreateCampaign from './pages/CreateCampaign';
 import CampaignDetails from './pages/CampaignDetails';
 import Profile from './pages/Profile';
+import AIAnalysis from './pages/AIAnalysis';
+import BlogGenerator from './pages/AIAnalysis';
 
 export default function App() {
   return (
@@ -19,6 +21,7 @@ export default function App() {
               <Route path="create" element={<CreateCampaign />} />
               <Route path="campaign/:id" element={<CampaignDetails />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="ai" element={<BlogGenerator />} />
             </Route>
           </Routes>
         </Web3Provider>

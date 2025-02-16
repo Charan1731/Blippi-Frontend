@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, PenLine, User } from 'lucide-react';
+import { Home, PenLine, User, Sparkles } from 'lucide-react';
 
 interface NavLinksProps {
   isAuthenticated: boolean;
@@ -12,7 +12,9 @@ export default function NavLinks({ isAuthenticated, isMobile, onClose }: NavLink
   const links = [
     { to: '/', icon: Home, label: 'Home' },
     { to: '/create', icon: PenLine, label: 'Create' },
-    ...(isAuthenticated ? [{ to: '/profile', icon: User, label: 'Profile' }] : []),
+    ...(isAuthenticated ? [{ to: '/profile', icon: User, label: 'Profile' },
+    { to: '/ai', icon: Sparkles, label: 'AI-Blog Generator' }
+    ] : []),
   ];
 
   const baseClasses = `
