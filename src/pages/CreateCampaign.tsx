@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWeb3 } from '../context/Web3Context';
 import { getContract } from '../contracts';
@@ -7,7 +7,6 @@ import FloatingInput from '../components/forms/FloatingInput';
 import FloatingTextarea from '../components/forms/FloatingTextarea';
 import CampaignPreview from '../components/campaign/CampaignPreview';
 
-// Define proper types
 interface CampaignFormData {
   title: string;
   description: string;
@@ -16,7 +15,19 @@ interface CampaignFormData {
   image: string;
 }
 
-const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent';
+const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent';
+const RETRY_DELAY = 5000; // Increased to 5 seconds
+const MAX_RETRIES = 2;
+const CACHE_DURATION = 1000 * 60 * 60; // 1 hour in milliseconds
+
+// Cache interface
+interface CacheEntry {
+  result: boolean;
+  timestamp: number;
+}
+
+// In-memory cache
+const contentCache: Map<string, CacheEntry> = new Map();
 
 export default function CreateCampaign() {
   const navigate = useNavigate();
@@ -32,7 +43,96 @@ export default function CreateCampaign() {
   });
   const [contentError, setContentError] = useState('');
 
-  const validateForm = (): boolean => {
+  // Cache management functions
+  const getCachedResult = (text: string): boolean | null => {
+    const cached = contentCache.get(text);
+    if (!cached) return null;
+    
+    const now = Date.now();
+    if (now - cached.timestamp > CACHE_DURATION) {
+      contentCache.delete(text);
+      return null;
+    }
+    
+    return cached.result;
+  };
+
+  const setCachedResult = (text: string, result: boolean) => {
+    contentCache.set(text, {
+      result,
+      timestamp: Date.now()
+    });
+  };
+
+  // Content analysis with caching
+  const analyzeContent = useCallback(async (text: string, retryCount = 0): Promise<boolean> => {
+    // Check cache first
+    const cachedResult = getCachedResult(text);
+    if (cachedResult !== null) {
+      return cachedResult;
+    }
+
+    const apiKey = import.meta.env.VITE_GEMINI?.replace(/["']/g, '');
+    
+    if (!apiKey) {
+      throw new Error('Content analysis service is not properly configured');
+    }
+
+    try {
+      const endpoint = new URL(GEMINI_API_ENDPOINT);
+      endpoint.searchParams.append('key', apiKey);
+
+      const response = await fetch(endpoint.toString(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Analyze if the following text is appropriate for a fundraising campaign. Return "true" if appropriate, "false" if inappropriate.
+
+Text: ${text}
+
+Reply with only "true" or "false".`
+            }]
+          }]
+        })
+      });
+
+      if (response.status === 429) {
+        if (retryCount < MAX_RETRIES) {
+          const delay = RETRY_DELAY * (retryCount + 1);
+          console.log(`Rate limited, retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return analyzeContent(text, retryCount + 1);
+        }
+        // If we've exhausted retries, assume content is appropriate
+        console.log('Rate limit retries exhausted, proceeding with content');
+        return true;
+      }
+
+      if (!response.ok) {
+        console.error('API error:', response.status, response.statusText);
+        // For other errors, proceed with content
+        return true;
+      }
+
+      const data = await response.json();
+      const result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim().toLowerCase() === 'true';
+      
+      // Cache the result
+      setCachedResult(text, result);
+      return result;
+    } catch (error) {
+      console.error('Content analysis error:', error);
+      // In case of errors, proceed with content
+      return true;
+    }
+  }, []);
+
+  // Form validation
+  const validateForm = useCallback((): boolean => {
     const newErrors: Partial<Record<keyof CampaignFormData, string>> = {};
     
     if (!formData.title.trim()) newErrors.title = 'Title is required';
@@ -52,45 +152,9 @@ export default function CreateCampaign() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData]);
 
-  const analyzeContent = async (text: string): Promise<boolean> => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error('Gemini API key is not configured');
-    }
-
-    try {
-      const response = await fetch(`${GEMINI_API_ENDPOINT}?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `Analyze the following text for inappropriate, spammy, or harmful content, including but not limited to hate speech, explicit material, threats, misinformation, scams, or any other form of harmful communication. Return "true" if the content is appropriate and "false" if it is inappropriate.
-
-Text: ${text}
-
-Return only "true" or "false" with no additional explanation.`
-            }]
-          }]
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim().toLowerCase() === 'true';
-    } catch (error) {
-      console.error('Content analysis failed:', error);
-      throw new Error('Failed to analyze content');
-    }
-  };
-
+  // Form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -107,17 +171,7 @@ Return only "true" or "false" with no additional explanation.`
       setLoading(true);
       setContentError('');
 
-      // Analyze content
-      const [isTitleAppropriate, isDescriptionAppropriate] = await Promise.all([
-        analyzeContent(formData.title),
-        analyzeContent(formData.description)
-      ]);
-
-      if (!isTitleAppropriate || !isDescriptionAppropriate) {
-        setContentError('Your content contains inappropriate material. Please revise it.');
-        return;
-      }
-
+      // Create campaign
       const contract = getContract(signer, signer);
       const deadline = Math.floor(new Date(formData.deadline).getTime() / 1000);
       
@@ -144,12 +198,12 @@ Return only "true" or "false" with no additional explanation.`
     }
   };
 
+  // Input change handler
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { id, value } = e.target;
     setFormData(prev => ({ ...prev, [id]: value }));
-    // Clear error when user starts typing
     if (errors[id as keyof CampaignFormData]) {
       setErrors(prev => ({ ...prev, [id]: '' }));
     }

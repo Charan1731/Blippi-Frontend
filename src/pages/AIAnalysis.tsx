@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, FileText, PenTool, Copy, Moon, Sun } from 'lucide-react';
 import { motion } from 'framer-motion';
+import AnimatedText from '../components/AnimatedText';
 
 const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent';
 
@@ -277,7 +278,12 @@ Return the blog post with clear section breaks and formatting, but without any m
                     </button>
                   </div>
                   <div className="prose prose-indigo dark:prose-invert max-w-none">
-                    <pre className="whitespace-pre-wrap text-gray-800 dark:text-gray-200">{generatedContent}</pre>
+                    <pre className="whitespace-pre-wrap text-gray-800 dark:text-gray-200">
+                      <AnimatedText
+                        text={generatedContent}
+                        speed={10}
+                      />
+                    </pre>
                   </div>
                 </div>
               </motion.div>
