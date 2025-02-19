@@ -81,7 +81,7 @@ Guidelines:
    - Engaging headers
    - Short, impactful paragraphs
    - Bullet points for key information
-   - Highlighted donation amounts and their specific impact
+   - Highlighted donation amounts and their specific impact(Give the donation amount in ETH)
 7. End with a powerful conclusion that reinforces the urgency and importance of donating
 
 Important: Do not use any markdown formatting symbols (* or _) in the response. Write in plain text with natural emphasis through word choice and structure.
