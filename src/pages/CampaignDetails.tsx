@@ -79,6 +79,7 @@ export default function CampaignDetails() {
                 <MDEditor.Markdown 
                   source={campaign.description} 
                   style={{ whiteSpace: 'pre-wrap' }}
+                  className='bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm dark:text-white p-4 rounded-lg'
                 />
               </div>
             </div>

@@ -235,14 +235,12 @@ Return only the **fully written blog post** in Markdown format without explainin
 
         <div className="mt-12 max-w-3xl mx-auto">
           <div className="grid grid-cols-1 gap-8">
-            {/* Inputs Section */}
             <motion.div 
               className="space-y-8"
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 1 }}
             >
-              {/* Topic Input */}
               <div className="pt-6">
                 <div className="flow-root bg-white dark:bg-gray-800 rounded-lg px-6 pb-8 shadow-md hover:shadow-xl transition-shadow duration-300">
                   <div className="-mt-6">
@@ -260,8 +258,6 @@ Return only the **fully written blog post** in Markdown format without explainin
                   </div>
                 </div>
               </div>
-
-              {/* Description Input */}
               <div className="pt-6">
                 <div className="flow-root bg-white dark:bg-gray-800 rounded-lg px-6 pb-8 shadow-md hover:shadow-xl transition-shadow duration-300">
                   <div className="-mt-6">
@@ -279,8 +275,6 @@ Return only the **fully written blog post** in Markdown format without explainin
                   </div>
                 </div>
               </div>
-
-              {/* Generate Button */}
               <button
                 onClick={handleGenerateBlog}
                 disabled={loading || !topic.trim() || !description.trim()}
@@ -296,8 +290,6 @@ Return only the **fully written blog post** in Markdown format without explainin
                 )}
               </button>
             </motion.div>
-
-            {/* Generated Content Section with Markdown Editor */}
             {generatedContent && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -327,8 +319,6 @@ Return only the **fully written blog post** in Markdown format without explainin
                       </button>
                     </div>
                   </div>
-
-                  {/* Markdown Editor/Preview Toggle */}
                   <div data-color-mode={isDarkMode ? "dark" : "light"}>
                     {isEditing ? (
                       <div className="min-h-[500px]">
@@ -355,14 +345,11 @@ Return only the **fully written blog post** in Markdown format without explainin
                       </div>
                     )}
                   </div>
-
-                  {/* Save Changes Button (visible only in edit mode) */}
                   {isEditing && (
                     <div className="mt-4 flex justify-end">
                       <button
                         onClick={() => {
                           setIsEditing(false);
-                          // You can add save functionality here if needed
                         }}
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                       >

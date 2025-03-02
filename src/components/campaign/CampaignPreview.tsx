@@ -37,6 +37,7 @@ export default function CampaignPreview({ data }: CampaignPreviewProps) {
             <MDEditor.Markdown 
               source={data.description || 'Campaign description will appear here...'} 
               style={{ whiteSpace: 'pre-wrap' }}
+              className='bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm dark:text-white p-4 rounded-lg'
             />
             <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white/90 dark:from-gray-800/90 to-transparent" />
           </div>

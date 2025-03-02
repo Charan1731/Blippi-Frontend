@@ -153,8 +153,6 @@ Reply with only "true" or "false".`
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [formData]);
-
-  // Form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -255,6 +253,7 @@ Reply with only "true" or "false".`
                     onChange={(value) => handleInputChange(value || '', 'description')}
                     preview="edit"
                     height={300}
+                    className='dark:bg-gray-800/50 dark:text-white p-4 rounded-lg'
                   />
                 </div>
                 {errors.description && (
