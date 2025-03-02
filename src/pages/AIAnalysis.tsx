@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, FileText, PenTool, Copy, Moon, Sun } from 'lucide-react';
+import { Loader2, FileText, PenTool, Copy, Moon, Sun, Edit2, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AnimatedText from '../components/AnimatedText';
+import MDEditor from '@uiw/react-md-editor';
 
-const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent';
+const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
 
 const BlogGenerator = () => {
   const [topic, setTopic] = useState('');
@@ -13,6 +14,8 @@ const BlogGenerator = () => {
   const [error, setError] = useState('');
   const [isCopied, setIsCopied] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState('');
 
   // Toggle dark mode
   const toggleDarkMode = () => {
@@ -41,7 +44,7 @@ const BlogGenerator = () => {
   };
 
   const handleGenerateBlog = async () => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const apiKey = import.meta.env.VITE_GEMINI?.replace(/["']/g, '');
     if (!apiKey) {
       setError('Gemini API key is not configured');
       return;
@@ -57,36 +60,60 @@ const BlogGenerator = () => {
     setGeneratedContent('');
 
     try {
-      const prompt = `You are an expert blog writer specializing in compelling storytelling and impact-driven content. Generate a persuasive blog post that will inspire readers to support the cause through donations. Write without any markdown formatting symbols (* or _).
+      const prompt = `You are an expert blog writer specializing in compelling storytelling and impact-driven content. Generate a **persuasive blog post** that will **inspire readers to support the cause through donations**, formatted in **Markdown**.
 
-Topic: ${topic}
-Description: ${description}
+### **Topic:** ${topic}  
+### **Description:** ${description}  
 
-Guidelines:
-1. Craft a powerful opening that creates an emotional connection with readers
-2. Include real-world examples or scenarios that illustrate the impact of donations
-3. Use persuasive storytelling techniques to engage readers
-4. Structure the content to build trust and credibility:
-   - Clear problem statement
-   - Tangible solution
-   - Specific impact of donations
-   - Call to action
-5. Include key sections:
-   - Introduction: Hook readers with a compelling narrative
-   - The Challenge: Describe the problem in human terms
-   - The Solution: Explain how donations will help
-   - Impact Story: Share potential outcomes
-   - Call to Action: Clear instructions on how to donate
-6. Use formatting to enhance readability:
-   - Engaging headers
-   - Short, impactful paragraphs
-   - Bullet points for key information
-   - Highlighted donation amounts and their specific impact(Give the donation amount in ETH)
-7. End with a powerful conclusion that reinforces the urgency and importance of donating
+## **Guidelines for Writing the Blog Post:**
 
-Important: Do not use any markdown formatting symbols (* or _) in the response. Write in plain text with natural emphasis through word choice and structure.
+### **1. Powerful Opening**  
+- Begin with an **emotional hook** that creates a strong connection with the reader.  
+- Use storytelling techniques to **draw them in** and make them feel personally involved.  
 
-Return the blog post with clear section breaks and formatting, but without any markdown symbols.`;
+### **2. The Challenge**  
+- Clearly describe the **problem** in **human terms**.  
+- Use real-world examples or relatable scenarios to **illustrate the severity** of the issue.  
+
+### **3. The Solution**  
+- Explain **how donations** will directly **address the problem**.  
+- Provide a clear, actionable plan that **builds trust and credibility**.  
+
+### **4. Impact Story**  
+- Share a **compelling real-life example or testimonial** that shows the **tangible difference** donations can make.  
+- Make the reader **visualize the outcome** of their support.  
+
+### **5. Call to Action (CTA)**  
+- Provide a **strong, clear directive** on how to donate.  
+- Use bullet points to break down **different donation amounts in ETH** and their specific impact:  
+
+  - **0.01 ETH**: Provides food and shelter for a child for a day.  
+  - **0.05 ETH**: Supports healthcare for a family in need.  
+  - **0.1 ETH**: Funds an entire education program for a child.  
+
+### **6. Formatting for Readability**  
+- Use **bold** for emphasis.  
+- Break content into **short, engaging paragraphs**.  
+- Include **bullet points and numbered lists** for clarity.  
+- Use **quotes or testimonials** to reinforce credibility.  
+
+### **7. Conclusion**  
+- End with a **powerful, urgent message** that reinforces why donating **now** is crucial.  
+- Leave readers with a **sense of purpose and inspiration**.  
+
+---
+
+## **Output Format:**
+Ensure the final blog post is structured using **Markdown** with:  
+- **Headers (#, ##, ###)** for sections.  
+- **Bold text (**bold**)** for emphasis.  
+- **Bullet points (-)** for lists.  
+- **Numbered lists (1. 2. 3.) when needed.**  
+- **Quotes (>) for impactful messages.**  
+
+**Do not use markdown symbols in the prompt, but ensure the final output is in proper Markdown format.**  
+
+Return only the **fully written blog post** in Markdown format without explaining the structure separately.`;
 
       const response = await fetch(`${GEMINI_API_ENDPOINT}?key=${apiKey}`, {
         method: 'POST',
@@ -96,7 +123,31 @@ Return the blog post with clear section breaks and formatting, but without any m
         body: JSON.stringify({
           contents: [{
             parts: [{ text: prompt }]
-          }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 2048,
+          },
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_HATE_SPEECH",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            }
+          ]
         })
       });
 
@@ -122,11 +173,20 @@ Return the blog post with clear section breaks and formatting, but without any m
     }
   };
 
+  // Update editedContent when new content is generated
+  useEffect(() => {
+    if (generatedContent) {
+      setEditedContent(generatedContent);
+    }
+  }, [generatedContent]);
+
+  // Modified copy handler to use edited content
   const handleCopyToClipboard = async () => {
-    if (!generatedContent) return;
+    const contentToCopy = isEditing ? editedContent : generatedContent;
+    if (!contentToCopy) return;
     
     try {
-      await navigator.clipboard.writeText(generatedContent);
+      await navigator.clipboard.writeText(contentToCopy);
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
@@ -134,6 +194,7 @@ Return the blog post with clear section breaks and formatting, but without any m
       setError('Failed to copy content to clipboard. Please try again.');
     }
   };
+
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-white via-indigo-50 to-indigo-100 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-x-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
@@ -236,57 +297,102 @@ Return the blog post with clear section breaks and formatting, but without any m
               </button>
             </motion.div>
 
-            {/* Error Message */}
-            {error && (
-              <motion.div 
-                className="rounded-md bg-red-50 dark:bg-red-900/20 p-4 border border-red-200 dark:border-red-800"
+            {/* Generated Content Section with Markdown Editor */}
+            {generatedContent && (
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+                className="mt-8"
               >
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-red-400 dark:text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 relative">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                      Generated Blog Post
+                    </h2>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setIsEditing(!isEditing)}
+                        className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                        title={isEditing ? "View preview" : "Edit content"}
+                      >
+                        {isEditing ? <Eye className="h-5 w-5" /> : <Edit2 className="h-5 w-5" />}
+                      </button>
+                      <button
+                        onClick={handleCopyToClipboard}
+                        className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                        title="Copy to clipboard"
+                      >
+                        <Copy className="h-5 w-5" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+
+                  {/* Markdown Editor/Preview Toggle */}
+                  <div data-color-mode={isDarkMode ? "dark" : "light"}>
+                    {isEditing ? (
+                      <div className="min-h-[500px]">
+                        <MDEditor
+                          value={editedContent}
+                          onChange={(value) => setEditedContent(value || '')}
+                          preview="edit"
+                          height={500}
+                          className="w-full"
+                          hideToolbar={false}
+                          enableScroll={true}
+                        />
+                      </div>
+                    ) : (
+                      <div className="prose prose-sm md:prose-base lg:prose-lg dark:prose-invert max-w-none">
+                        <MDEditor.Markdown
+                          source={editedContent || generatedContent}
+                          style={{
+                            backgroundColor: 'transparent',
+                            color: isDarkMode ? '#fff' : '#000',
+                            fontFamily: 'inherit'
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
+
+                  {/* Save Changes Button (visible only in edit mode) */}
+                  {isEditing && (
+                    <div className="mt-4 flex justify-end">
+                      <button
+                        onClick={() => {
+                          setIsEditing(false);
+                          // You can add save functionality here if needed
+                        }}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Save Changes
+                      </button>
+                    </div>
+                  )}
                 </div>
+
+                {/* Copy Confirmation Toast */}
+                {isCopied && (
+                  <div className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg animate-fade-in-up">
+                    Copied to clipboard!
+                  </div>
+                )}
               </motion.div>
             )}
 
-            {/* Generated Content */}
-            {generatedContent && (
-              <motion.div 
-                className="rounded-lg bg-white dark:bg-gray-800 shadow-lg overflow-hidden"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-              >
-                <div className="p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Generated Blog Post</h2>
-                    <button
-                      onClick={handleCopyToClipboard}
-                      disabled={!generatedContent}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      <Copy className="mr-2 h-4 w-4" />
-                      {isCopied ? 'Copied!' : 'Copy to Clipboard'}
-                    </button>
-                  </div>
-                  <div className="prose prose-indigo dark:prose-invert max-w-none">
-                    <pre className="whitespace-pre-wrap text-gray-800 dark:text-gray-200">
-                      <AnimatedText
-                        text={generatedContent}
-                        speed={10}
-                      />
-                    </pre>
-                  </div>
-                </div>
-              </motion.div>
+            {/* Error Message */}
+            {error && (
+              <div className="mt-6 text-center text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/50 p-4 rounded-lg">
+                {error}
+              </div>
+            )}
+
+            {/* Loading State */}
+            {loading && (
+              <div className="mt-6 flex justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+              </div>
             )}
           </div>
         </div>

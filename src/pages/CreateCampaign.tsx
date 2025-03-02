@@ -4,8 +4,8 @@ import { useWeb3 } from '../context/Web3Context';
 import { getContract } from '../contracts';
 import { parseEther } from 'ethers';
 import FloatingInput from '../components/forms/FloatingInput';
-import FloatingTextarea from '../components/forms/FloatingTextarea';
 import CampaignPreview from '../components/campaign/CampaignPreview';
+import MDEditor from '@uiw/react-md-editor';
 
 interface CampaignFormData {
   title: string;
@@ -200,12 +200,23 @@ Reply with only "true" or "false".`
 
   // Input change handler
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string,
+    id?: string
   ) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({ ...prev, [id]: value }));
-    if (errors[id as keyof CampaignFormData]) {
-      setErrors(prev => ({ ...prev, [id]: '' }));
+    // If e is a string, it's from the markdown editor
+    if (typeof e === 'string') {
+      setFormData(prev => ({ ...prev, description: e }));
+      if (errors.description) {
+        setErrors(prev => ({ ...prev, description: '' }));
+      }
+      return;
+    }
+
+    // Regular input handling
+    const { id: inputId, value } = e.target;
+    setFormData(prev => ({ ...prev, [inputId]: value }));
+    if (errors[inputId as keyof CampaignFormData]) {
+      setErrors(prev => ({ ...prev, [inputId]: '' }));
     }
   };
 
@@ -234,14 +245,22 @@ Reply with only "true" or "false".`
                 maxLength={100}
               />
 
-              <FloatingTextarea
-                id="description"
-                label="Campaign Description"
-                value={formData.description}
-                onChange={handleInputChange}
-                error={errors.description}
-                maxLength={2000}
-              />
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Campaign Description
+                </label>
+                <div data-color-mode="light" className="w-full">
+                  <MDEditor
+                    value={formData.description}
+                    onChange={(value) => handleInputChange(value || '', 'description')}
+                    preview="edit"
+                    height={300}
+                  />
+                </div>
+                {errors.description && (
+                  <p className="text-sm text-red-600">{errors.description}</p>
+                )}
+              </div>
 
               <FloatingInput
                 id="target"
@@ -270,7 +289,7 @@ Reply with only "true" or "false".`
                 label="Campaign Image URL"
                 value={formData.image}
                 onChange={handleInputChange}
-                placeholder="https://example.com/image.jpg"
+                placeholder=""
               />
 
               {contentError && (

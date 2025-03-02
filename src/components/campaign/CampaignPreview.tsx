@@ -1,6 +1,7 @@
 import React from 'react';
 import { formatEther } from 'ethers';
 import type { CampaignFormData } from '../../types/campaign';
+import MDEditor from '@uiw/react-md-editor';
 
 interface CampaignPreviewProps {
   data: CampaignFormData;
@@ -27,13 +28,19 @@ export default function CampaignPreview({ data }: CampaignPreviewProps) {
       <div className="space-y-4">
         <div>
           <h4 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {data.title || 'Blog Title'}
+            {data.title || 'Campaign Title'}
           </h4>
         </div>
         
-        <p className="text-gray-600 dark:text-gray-300 line-clamp-3">
-          {data.description || 'Blog description will appear here...'}
-        </p>
+        <div data-color-mode="light" className="prose prose-sm max-w-none">
+          <div className="max-h-[150px] overflow-hidden relative">
+            <MDEditor.Markdown 
+              source={data.description || 'Campaign description will appear here...'} 
+              style={{ whiteSpace: 'pre-wrap' }}
+            />
+            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white/90 dark:from-gray-800/90 to-transparent" />
+          </div>
+        </div>
         
         <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           <div>
