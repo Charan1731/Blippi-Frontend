@@ -16,6 +16,7 @@ const BlogGenerator = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState('');
+  const [showAnimatedText, setShowAnimatedText] = useState(false);
 
   // Toggle dark mode
   const toggleDarkMode = () => {
@@ -58,6 +59,7 @@ const BlogGenerator = () => {
     setLoading(true);
     setError('');
     setGeneratedContent('');
+    setShowAnimatedText(false);
 
     try {
       const prompt = `You are an expert blog writer specializing in compelling storytelling and impact-driven content. Generate a **persuasive blog post** that will **inspire readers to support the cause through donations**, formatted in **Markdown**.
@@ -162,9 +164,10 @@ Return only the **fully written blog post** in Markdown format without explainin
         throw new Error('Invalid response format from API');
       }
 
-      // Clean any remaining markdown formatting from the response
-      const cleanedContent = cleanMarkdownFormatting(data.candidates[0].content.parts[0].text);
-      setGeneratedContent(cleanedContent);
+      // Store generated content with markdown formatting intact
+      const content = data.candidates[0].content.parts[0].text;
+      setGeneratedContent(content);
+      setShowAnimatedText(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate blog. Please try again.');
       console.error('Generation Error:', err);
@@ -304,6 +307,13 @@ Return only the **fully written blog post** in Markdown format without explainin
                     </h2>
                     <div className="flex items-center gap-2">
                       <button
+                        onClick={toggleDarkMode}
+                        className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                        title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+                      >
+                        {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                      </button>
+                      <button
                         onClick={() => setIsEditing(!isEditing)}
                         className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                         title={isEditing ? "View preview" : "Edit content"}
@@ -334,14 +344,22 @@ Return only the **fully written blog post** in Markdown format without explainin
                       </div>
                     ) : (
                       <div className="prose prose-sm md:prose-base lg:prose-lg dark:prose-invert max-w-none">
-                        <MDEditor.Markdown
-                          source={editedContent || generatedContent}
-                          style={{
-                            backgroundColor: 'transparent',
-                            color: isDarkMode ? '#fff' : '#000',
-                            fontFamily: 'inherit'
-                          }}
-                        />
+                        {showAnimatedText ? (
+                          <AnimatedText 
+                            text={editedContent || generatedContent} 
+                            speed={5}
+                            className="block whitespace-pre-wrap text-gray-800 dark:text-gray-200"
+                          />
+                        ) : (
+                          <MDEditor.Markdown
+                            source={editedContent || generatedContent}
+                            style={{
+                              backgroundColor: 'transparent',
+                              color: isDarkMode ? '#fff' : '#000',
+                              fontFamily: 'inherit'
+                            }}
+                          />
+                        )}
                       </div>
                     )}
                   </div>
