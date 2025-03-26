@@ -19,9 +19,22 @@ export default function Profile() {
       try {
         const contract = getContract(provider);
         const allCampaigns = await contract.getCampaigns();
-        const userCampaigns = allCampaigns.filter(
-          (campaign: Campaign) => campaign.owner.toLowerCase() === account.toLowerCase()
-        );
+        const userCampaigns = allCampaigns
+          .filter((campaign: any) => 
+            campaign && campaign.exists && campaign.owner.toLowerCase() === account.toLowerCase()
+          )
+          .map((campaign: any) => ({
+            id: Number(campaign.id),
+            owner: campaign.owner,
+            title: campaign.title,
+            description: campaign.description,
+            target: campaign.target,
+            deadline: campaign.deadline,
+            amountCollected: campaign.amountCollected,
+            image: campaign.image,
+            donators: campaign.donators || [],
+            donations: campaign.donations || []
+          }));
         setCampaigns(userCampaigns);
       } catch (error) {
         console.error('Error fetching user campaigns:', error);

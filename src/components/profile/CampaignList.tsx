@@ -13,6 +13,7 @@ export default function CampaignList({ campaigns }: CampaignListProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {campaigns.map((campaign, index) => {
         const isActive = Number(campaign.deadline) * 1000 > Date.now();
+        const campaignId = campaign.id !== undefined ? campaign.id : index;
         
         return (
           <div
@@ -56,7 +57,7 @@ export default function CampaignList({ campaigns }: CampaignListProps) {
                 </div>
                 
                 <Link
-                  to={`/campaign/${index}`}
+                  to={`/campaign/${campaignId}`}
                   className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:gap-3 transition-all duration-200"
                 >
                   View Details

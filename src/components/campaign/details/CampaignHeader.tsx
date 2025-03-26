@@ -1,15 +1,23 @@
 import React from 'react';
 import { formatEther } from 'ethers';
-import { Calendar, Target, Users } from 'lucide-react';
+import { Calendar, Target, Users, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
+import { useWeb3 } from '../../../context/Web3Context';
 import type { Campaign } from '../../../types/campaign';
 
 interface CampaignHeaderProps {
   campaign: Campaign;
+  campaignId: string;
+  onDelete: () => void;
 }
 
-export default function CampaignHeader({ campaign }: CampaignHeaderProps) {
+export default function CampaignHeader({ campaign, campaignId, onDelete }: CampaignHeaderProps) {
   const progress = Number(campaign.amountCollected) / Number(campaign.target) * 100;
+  const { account } = useWeb3();
+  const navigate = useNavigate();
+  
+  const isOwner = account && campaign.owner.toLowerCase() === account.toLowerCase();
   
   return (
     <div className="relative mt-10 overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500/5 to-purple-500/5 backdrop-blur-sm">
@@ -22,9 +30,30 @@ export default function CampaignHeader({ campaign }: CampaignHeaderProps) {
       </div>
       
       <div className="p-8">
-        <h1 className="font-display text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 mb-4">
-          {campaign.title}
-        </h1>
+        <div className="flex justify-between items-start">
+          <h1 className="font-display text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 mb-4">
+            {campaign.title}
+          </h1>
+          
+          {isOwner && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate(`/campaign/edit/${campaignId}`)}
+                className="flex items-center gap-2 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Edit className="w-4 h-4" />
+                Edit
+              </button>
+              <button
+                onClick={onDelete}
+                className="flex items-center gap-2 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 flex items-center gap-3">

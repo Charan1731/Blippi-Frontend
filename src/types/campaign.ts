@@ -1,4 +1,5 @@
 export interface Campaign {
+  id?: number;  // Adding optional id field to store the campaign ID
   owner: string;
   title: string;
   description: string;
@@ -8,6 +9,12 @@ export interface Campaign {
   image: string;
   donators: string[];
   donations: bigint[];
+}
+
+// Raw campaign data from contract
+export interface CampaignData extends Omit<Campaign, 'id'> {
+  id: bigint;
+  exists: boolean;
 }
 
 export interface CampaignFormData {

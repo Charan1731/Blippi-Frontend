@@ -34,7 +34,24 @@ export default function Home() {
       try {
         const contract = getContract(provider);
         const data = await contract.getCampaigns();
-        setCampaigns(data);
+        
+        // Filter out campaigns that don't exist or have invalid data
+        const validCampaigns = data.filter((campaign: any) => 
+          campaign && campaign.exists && campaign.owner && campaign.title
+        ).map((campaign: any) => ({
+          id: Number(campaign.id),
+          owner: campaign.owner,
+          title: campaign.title,
+          description: campaign.description,
+          target: campaign.target,
+          deadline: campaign.deadline,
+          amountCollected: campaign.amountCollected,
+          image: campaign.image,
+          donators: campaign.donators || [],
+          donations: campaign.donations || []
+        }));
+        
+        setCampaigns(validCampaigns);
       } catch (error) {
         console.error('Error fetching campaigns:', error);
       } finally {
@@ -66,8 +83,8 @@ export default function Home() {
           return Number(b.amountCollected) - Number(a.amountCollected);
         case 'leastFunded':
           return Number(a.amountCollected) - Number(b.amountCollected);
-        // default: // newest
-        //   return Number(b.deadline) - Number(a.deadline);
+        default: // newest
+          return Number(b.deadline) - Number(a.deadline);
       }
     });
 
@@ -76,7 +93,7 @@ export default function Home() {
 
   if (loading) {
     return (
-      <main className="w-full md:px-10 py-5 min-h-screen p-5 mt-20 bg-gradient-to-b from-blue-300 to-white">
+      <main className="w-full md:px-10 py-5 min-h-screen p-5 mt-20 bg-gradient-to-b from-blue-300 to-white dark:from-blue-900 dark:to-gray-900 transition-colors duration-200">
   <div className="flex flex-col justify-center items-center mt-28 space-y-10 h-64">
     <Lottie
       animationData={blockchainanimation}
@@ -85,7 +102,7 @@ export default function Home() {
       style={{ height: 500, width: 500 }}
       className="mt-10"
     />
-    <h1 className="heading text-center text-2xl text-black font-bold px-5">
+    <h1 className="heading text-center text-2xl text-black dark:text-white font-bold px-5 transition-colors duration-200">
       Connect your Metamask wallet, enable the test network, and select Sepolia to view the blogs.
     </h1>
   </div>
