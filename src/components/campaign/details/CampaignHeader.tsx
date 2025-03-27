@@ -39,14 +39,14 @@ export default function CampaignHeader({ campaign, campaignId, onDelete }: Campa
             <div className="flex gap-2">
               <button
                 onClick={() => navigate(`/campaign/edit/${campaignId}`)}
-                className="flex items-center gap-2 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex items-center gap-2 py-2 px-4 bg-blue-200 text-blue-600 rounded-lg hover:bg-blue-300 transition-colors"
               >
                 <Edit className="w-4 h-4" />
                 Edit
               </button>
               <button
                 onClick={onDelete}
-                className="flex items-center gap-2 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="flex items-center gap-2 py-2 px-4 bg-red-200 text-red-600 rounded-lg hover:bg-red-300 transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
                 Delete

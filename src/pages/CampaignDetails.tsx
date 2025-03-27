@@ -166,7 +166,7 @@ export default function CampaignDetails() {
               </button>
               <button
                 onClick={handleDeleteCampaign}
-                className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex justify-center items-center"
+                className="flex-1 py-2 px-4 bg-red-200 text-red-600 rounded-lg hover:bg-red-300 transition-colors flex justify-center items-center"
                 disabled={isDeleting}
               >
                 {isDeleting ? (
