@@ -96,7 +96,7 @@ export default function EditCampaign() {
         body: JSON.stringify({
           contents: [{
             parts: [{
-              text: `Analyze if the following text is appropriate for a fundraising campaign. Only mark as inappropriate if the content contains explicit harmful content such as hate speech, threats, explicit adult content, or illegal activities.
+              text: `Analyze if the following text is appropriate for a fundraising campaign. Only mark as inappropriate if the content contains explicit harmful content such as hate speech, threats, explicit adult content, or illegal activities(consider bettings and scams as high level threats).
 
 Text: ${text}
 
@@ -322,7 +322,6 @@ Reply with only "true" if appropriate or "false" if clearly inappropriate. When 
     navigate(`/campaign/${id}`);
   };
 
-  // Input change handler
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string,
     id?: string
