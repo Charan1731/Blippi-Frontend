@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { parseEther } from 'ethers';
-import { Wallet } from 'lucide-react';
+import { Wallet, ArrowRight } from 'lucide-react';
 import { useWeb3 } from '../../../context/Web3Context';
 
 interface DonationFormProps {
@@ -42,6 +42,7 @@ export default function DonationForm({ campaignId, onDonate }: DonationFormProps
               onChange={(e) => setAmount(e.target.value)}
               placeholder="Enter amount in ETH"
               className="w-full bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+              disabled={loading}
             />
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-500">
               ETH
@@ -51,19 +52,42 @@ export default function DonationForm({ campaignId, onDonate }: DonationFormProps
           <button
             type="submit"
             disabled={loading || !amount}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl px-4 py-3 font-medium transition-all duration-200 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl px-4 py-3 font-medium 
+              transition-all duration-200 hover:from-blue-700 hover:to-purple-700 
+              disabled:opacity-50 disabled:cursor-not-allowed 
+              relative overflow-hidden group"
           >
-            <span className="relative z-10">
-              {loading ? 'Processing...' : 'Donate Now'}
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              {loading ? (
+                <>
+                  <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span className="animate-pulse">Processing Transaction...</span>
+                </>
+              ) : (
+                <>
+                  Donate Now
+                  <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+                </>
+              )}
             </span>
             <div className="absolute inset-0 -translate-x-full group-hover:translate-x-0 bg-gradient-to-r from-purple-600 to-blue-600 transition-transform duration-500" />
           </button>
+          
+          {loading && (
+            <div className="text-center text-sm text-gray-500 dark:text-gray-400 animate-fade-in">
+              <p>Please confirm the transaction in your wallet...</p>
+              <p className="mt-1">Do not close this window during processing.</p>
+            </div>
+          )}
         </form>
       ) : (
-        <div className="text-center p-4 border border-gray-200 dark:border-gray-700 rounded-xl">
-          <Wallet className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-          <p className="text-gray-500 dark:text-gray-400">
+        <div className="text-center p-6 border border-gray-200 dark:border-gray-700 rounded-xl">
+          <Wallet className="w-12 h-12 mx-auto mb-3 text-gray-400/80 dark:text-gray-500" />
+          <p className="text-gray-600 dark:text-gray-400 font-medium">
             Connect your wallet to donate
+          </p>
+          <p className="text-gray-500 dark:text-gray-500 text-sm mt-1">
+            You need to connect your wallet first to make a donation
           </p>
         </div>
       )}

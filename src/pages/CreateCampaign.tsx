@@ -6,6 +6,8 @@ import { parseEther } from 'ethers';
 import FloatingInput from '../components/forms/FloatingInput';
 import CampaignPreview from '../components/campaign/CampaignPreview';
 import MDEditor from '@uiw/react-md-editor';
+import Modal from '../components/Modal';
+import SuccessConfirmation from '../components/SuccessConfirmation';
 
 interface CampaignFormData {
   title: string;
@@ -34,6 +36,7 @@ export default function CreateCampaign() {
   const [loading, setLoading] = useState(false);
   const [isModeratingContent, setIsModeratingContent] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof CampaignFormData, string>>>({});
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [formData, setFormData] = useState<CampaignFormData>({
     title: '',
     description: '',
@@ -42,6 +45,7 @@ export default function CreateCampaign() {
     image: '',
   });
   const [contentError, setContentError] = useState('');
+  const [newCampaignId, setNewCampaignId] = useState<string | null>(null);
 
   const getCachedResult = (text: string): boolean | null => {
     const cached = contentCache.get(text);
@@ -91,29 +95,29 @@ export default function CreateCampaign() {
         body: JSON.stringify({
           contents: [{
             parts: [{
-              text: `Analyze if the following text is appropriate for a fundraising campaign. Return "true" if appropriate, "false" if inappropriate.
+              text: `Analyze if the following text is appropriate for a fundraising campaign. Only mark as inappropriate if the content contains explicit harmful content such as hate speech, threats, explicit adult content, or illegal activities.
 
 Text: ${text}
 
-Reply with only "true" or "false".`
+Reply with only "true" if appropriate or "false" if clearly inappropriate. When in doubt, reply with "true".`
             }]
           }],
           safetySettings: [
             {
               category: "HARM_CATEGORY_HARASSMENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+              threshold: "BLOCK_ONLY_HIGH"
             },
             {
               category: "HARM_CATEGORY_HATE_SPEECH",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+              threshold: "BLOCK_ONLY_HIGH"
             },
             {
               category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+              threshold: "BLOCK_ONLY_HIGH"
             },
             {
               category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+              threshold: "BLOCK_ONLY_HIGH"
             }
           ]
         })
@@ -126,47 +130,48 @@ Reply with only "true" or "false".`
           await new Promise(resolve => setTimeout(resolve, delay));
           return analyzeContent(text, retryCount + 1);
         }
-        // If we've exhausted retries, assume content is appropriate
         console.log('Rate limit retries exhausted, proceeding with content');
         return { isAppropriate: true, error: 'Content moderation service is busy. Your content has been accepted.' };
       }
 
       if (!response.ok) {
         console.error('API error:', response.status, response.statusText);
-        // For other errors, proceed with content
+
         return { isAppropriate: true, error: 'Content moderation service encountered an error. Your content has been accepted.' };
       }
 
       const data = await response.json();
       
-      // More robust parsing of the response
+
+      console.log('Gemini API response:', JSON.stringify(data, null, 2));
+      
+
       let result = true;
       if (data.candidates && data.candidates.length > 0) {
         const textResponse = data.candidates[0]?.content?.parts?.[0]?.text?.trim().toLowerCase();
+        console.log('Gemini text response:', textResponse);
+        
         if (textResponse === 'false') {
           result = false;
-        } else if (textResponse !== 'true') {
-          console.warn('Unexpected response from content moderation API:', textResponse);
         }
       }
       
-      // Cache the result
+
       setCachedResult(text, result);
       return { isAppropriate: result };
     } catch (error) {
       console.error('Content analysis error:', error);
-      // In case of errors, proceed with content
+
       return { isAppropriate: true, error: 'Content moderation check failed. Your content has been accepted.' };
     }
   }, []);
 
-  // Form validation
+
   const validateForm = useCallback((): boolean => {
     const newErrors: Partial<Record<keyof CampaignFormData, string>> = {};
     
     if (!formData.title.trim()) newErrors.title = 'Title is required';
     if (!formData.description.trim()) newErrors.description = 'Description is required';
-    // Check if description is too long (Solidity strings can be limited in size)
     if (formData.description.length > 10000) {
       newErrors.description = 'Description is too long. Please keep it under 10,000 characters.';
     }
@@ -202,7 +207,7 @@ Reply with only "true" or "false".`
       setLoading(true);
       setContentError('');
 
-      // Check content moderation for title and description
+
       setIsModeratingContent(true);
       const combinedText = `Title: ${formData.title.trim()}\nDescription: ${formData.description.trim()}`;
       const { isAppropriate, error } = await analyzeContent(combinedText);
@@ -210,8 +215,6 @@ Reply with only "true" or "false".`
       
       if (error) {
         console.warn('Content moderation warning:', error);
-        // We can optionally show a non-blocking warning here
-        // setContentError(error);
       }
       
       if (!isAppropriate) {
@@ -220,7 +223,6 @@ Reply with only "true" or "false".`
         return;
       }
 
-      // Create campaign
       if (!provider) {
         setContentError('Provider not available');
         return;
@@ -228,7 +230,6 @@ Reply with only "true" or "false".`
       const contract = getContract(provider, signer);
       const deadline = Math.floor(new Date(formData.deadline).getTime() / 1000);
       
-      // Log transaction parameters for debugging
       console.log('Creating campaign with params:', {
         title: formData.title.trim(),
         description: formData.description.trim(),
@@ -237,7 +238,6 @@ Reply with only "true" or "false".`
         image: formData.image.trim()
       });
       
-      // Use higher gas limit to ensure transaction doesn't fail
       const tx = await contract.createCampaign(
         formData.title.trim(),
         formData.description.trim(),
@@ -245,12 +245,28 @@ Reply with only "true" or "false".`
         deadline,
         formData.image.trim(),
         { 
-          gasLimit: 3000000 // Set a higher gas limit explicitly
+          gasLimit: 3000000
         }
       );
 
-      await tx.wait();
-      navigate('/');
+      const receipt = await tx.wait();
+      console.log('Campaign created:', receipt);
+      
+      try {
+        const event = receipt.logs
+          .map((log: any) => contract.interface.parseLog(log))
+          .find((event: any) => event && event.name === 'CampaignCreated');
+        
+        if (event && event.args) {
+          const campaignId = event.args[0].toString();
+          console.log('New campaign ID:', campaignId);
+          setNewCampaignId(campaignId);
+        }
+      } catch (error) {
+        console.error('Error parsing campaign ID from event:', error);
+      }
+      
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Error creating campaign:', error);
       setContentError(
@@ -263,12 +279,24 @@ Reply with only "true" or "false".`
     }
   };
 
-  // Input change handler
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
+    navigate('/');
+  };
+
+  const handleViewCampaign = () => {
+    setShowSuccessModal(false);
+    if (newCampaignId) {
+      navigate(`/campaign/${newCampaignId}`);
+    } else {
+      navigate('/');
+    }
+  };
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string,
     id?: string
   ) => {
-    // If e is a string, it's from the markdown editor
     if (typeof e === 'string') {
       setFormData(prev => ({ ...prev, description: e }));
       if (errors.description) {
@@ -277,7 +305,6 @@ Reply with only "true" or "false".`
       return;
     }
 
-    // Regular input handling
     const { id: inputId, value } = e.target;
     setFormData(prev => ({ ...prev, [inputId]: value }));
     if (errors[inputId as keyof CampaignFormData]) {
@@ -392,6 +419,21 @@ Reply with only "true" or "false".`
             <CampaignPreview data={formData} />
           </div>
         </div>
+
+        {/* Success Modal */}
+        <Modal
+          isOpen={showSuccessModal}
+          onClose={handleCloseSuccessModal}
+          title="Campaign Created!"
+          type="success"
+        >
+          <SuccessConfirmation
+            title="Campaign Successfully Created!"
+            message="Your fundraising campaign has been created and is now live on the platform. Thank you for making a difference!"
+            actionText={newCampaignId ? "View Your Campaign" : "Go to Home"}
+            onAction={handleViewCampaign}
+          />
+        </Modal>
       </div>
     </div>
   );

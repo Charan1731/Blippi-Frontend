@@ -35,7 +35,6 @@ export default function Home() {
         const contract = getContract(provider);
         const data = await contract.getCampaigns();
         
-        // Filter out campaigns that don't exist or have invalid data
         const validCampaigns = data.filter((campaign: any) => 
           campaign && campaign.exists && campaign.owner && campaign.title
         ).map((campaign: any) => ({

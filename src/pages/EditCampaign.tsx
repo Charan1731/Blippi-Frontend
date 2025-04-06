@@ -6,6 +6,8 @@ import { parseEther, formatEther } from 'ethers';
 import FloatingInput from '../components/forms/FloatingInput';
 import CampaignPreview from '../components/campaign/CampaignPreview';
 import MDEditor from '@uiw/react-md-editor';
+import Modal from '../components/Modal';
+import SuccessConfirmation from '../components/SuccessConfirmation';
 
 interface CampaignFormData {
   title: string;
@@ -15,12 +17,25 @@ interface CampaignFormData {
   image: string;
 }
 
+const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+const RETRY_DELAY = 5000;
+const MAX_RETRIES = 2;
+const CACHE_DURATION = 1000 * 60 * 60;
+
+interface CacheEntry {
+  result: boolean;
+  timestamp: number;
+}
+
+const contentCache: Map<string, CacheEntry> = new Map();
+
 export default function EditCampaign() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { account, signer, provider } = useWeb3();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+  const [isModeratingContent, setIsModeratingContent] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof CampaignFormData, string>>>({});
   const [formData, setFormData] = useState<CampaignFormData>({
     title: '',
@@ -31,6 +46,121 @@ export default function EditCampaign() {
   });
   const [contentError, setContentError] = useState('');
   const [isOwner, setIsOwner] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  const getCachedResult = (text: string): boolean | null => {
+    const cached = contentCache.get(text);
+    if (!cached) return null;
+    
+    const now = Date.now();
+    if (now - cached.timestamp > CACHE_DURATION) {
+      contentCache.delete(text);
+      return null;
+    }
+    
+    return cached.result;
+  };
+
+  const setCachedResult = (text: string, result: boolean) => {
+    contentCache.set(text, {
+      result,
+      timestamp: Date.now()
+    });
+  };
+
+  const analyzeContent = useCallback(async (text: string, retryCount = 0): Promise<{isAppropriate: boolean, error?: string}> => {
+    const cachedResult = getCachedResult(text);
+    if (cachedResult !== null) {
+      return { isAppropriate: cachedResult };
+    }
+
+    const apiKey = import.meta.env.VITE_GEMINI?.replace(/["']/g, '');
+    
+    if (!apiKey) {
+      console.error('Content analysis service is not properly configured - missing API key');
+      return { 
+        isAppropriate: true, 
+        error: 'Content moderation service is not available. Please check your settings or try again later.'
+      };
+    }
+
+    try {
+      const endpoint = new URL(GEMINI_API_ENDPOINT);
+      endpoint.searchParams.append('key', apiKey);
+
+      const response = await fetch(endpoint.toString(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Analyze if the following text is appropriate for a fundraising campaign. Only mark as inappropriate if the content contains explicit harmful content such as hate speech, threats, explicit adult content, or illegal activities.
+
+Text: ${text}
+
+Reply with only "true" if appropriate or "false" if clearly inappropriate. When in doubt, reply with "true".`
+            }]
+          }],
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_ONLY_HIGH"
+            },
+            {
+              category: "HARM_CATEGORY_HATE_SPEECH",
+              threshold: "BLOCK_ONLY_HIGH"
+            },
+            {
+              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              threshold: "BLOCK_ONLY_HIGH"
+            },
+            {
+              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+              threshold: "BLOCK_ONLY_HIGH"
+            }
+          ]
+        })
+      });
+
+      if (response.status === 429) {
+        if (retryCount < MAX_RETRIES) {
+          const delay = RETRY_DELAY * (retryCount + 1);
+          console.log(`Rate limited, retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return analyzeContent(text, retryCount + 1);
+        }
+        console.log('Rate limit retries exhausted, proceeding with content');
+        return { isAppropriate: true, error: 'Content moderation service is busy. Your content has been accepted.' };
+      }
+
+      if (!response.ok) {
+        console.error('API error:', response.status, response.statusText);
+        return { isAppropriate: true, error: 'Content moderation service encountered an error. Your content has been accepted.' };
+      }
+
+      const data = await response.json();
+      
+      console.log('Gemini API response:', JSON.stringify(data, null, 2));
+      
+      let result = true;
+      if (data.candidates && data.candidates.length > 0) {
+        const textResponse = data.candidates[0]?.content?.parts?.[0]?.text?.trim().toLowerCase();
+        console.log('Gemini text response:', textResponse);
+        
+        if (textResponse === 'false') {
+          result = false;
+        }
+      }
+      
+      setCachedResult(text, result);
+      return { isAppropriate: result };
+    } catch (error) {
+      console.error('Content analysis error:', error);
+      return { isAppropriate: true, error: 'Content moderation check failed. Your content has been accepted.' };
+    }
+  }, []);
 
   // Fetch campaign data
   useEffect(() => {
@@ -123,6 +253,22 @@ export default function EditCampaign() {
       setLoading(true);
       setContentError('');
 
+      // Check content moderation for title and description
+      setIsModeratingContent(true);
+      const combinedText = `Title: ${formData.title.trim()}\nDescription: ${formData.description.trim()}`;
+      const { isAppropriate, error } = await analyzeContent(combinedText);
+      setIsModeratingContent(false);
+      
+      if (error) {
+        console.warn('Content moderation warning:', error);
+      }
+      
+      if (!isAppropriate) {
+        setContentError('Your campaign contains inappropriate content. Please revise and try again.');
+        setLoading(false);
+        return;
+      }
+
       if (!provider) {
         setContentError('Provider not available');
         return;
@@ -131,7 +277,6 @@ export default function EditCampaign() {
       const contract = getContract(provider, signer);
       const deadline = Math.floor(new Date(formData.deadline).getTime() / 1000);
       
-      // Log transaction parameters for debugging
       console.log('Editing campaign with params:', {
         id,
         title: formData.title.trim(),
@@ -141,7 +286,6 @@ export default function EditCampaign() {
         image: formData.image.trim()
       });
       
-      // Use higher gas limit to ensure transaction doesn't fail
       const tx = await contract.editCampaign(
         id,
         formData.title.trim(),
@@ -150,12 +294,12 @@ export default function EditCampaign() {
         deadline,
         formData.image.trim(),
         { 
-          gasLimit: 3000000 // Set a higher gas limit explicitly
+          gasLimit: 3000000
         }
       );
 
       await tx.wait();
-      navigate(`/campaign/${id}`);
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Error updating campaign:', error);
       setContentError(
@@ -166,6 +310,16 @@ export default function EditCampaign() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
+    navigate(`/campaign/${id}`);
+  };
+
+  const handleViewCampaign = () => {
+    setShowSuccessModal(false);
+    navigate(`/campaign/${id}`);
   };
 
   // Input change handler
@@ -318,7 +472,7 @@ export default function EditCampaign() {
                   {loading ? (
                     <div className="flex items-center justify-center">
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                      Updating Campaign...
+                      {isModeratingContent ? 'Checking content...' : 'Updating Campaign...'}
                     </div>
                   ) : (
                     'Update Campaign'
@@ -331,6 +485,21 @@ export default function EditCampaign() {
             <CampaignPreview data={formData} />
           </div>
         </div>
+
+        {/* Success Modal */}
+        <Modal
+          isOpen={showSuccessModal}
+          onClose={handleCloseSuccessModal}
+          title="Campaign Updated!"
+          type="success"
+        >
+          <SuccessConfirmation
+            title="Campaign Successfully Updated!"
+            message="Your campaign has been updated with the new information. Thank you for keeping your supporters informed."
+            actionText="View Your Campaign"
+            onAction={handleViewCampaign}
+          />
+        </Modal>
       </div>
     </div>
   );
