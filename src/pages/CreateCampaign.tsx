@@ -15,24 +15,24 @@ interface CampaignFormData {
   image: string;
 }
 
-const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent';
-const RETRY_DELAY = 5000; // Increased to 5 seconds
+const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+const RETRY_DELAY = 5000;
 const MAX_RETRIES = 2;
-const CACHE_DURATION = 1000 * 60 * 60; // 1 hour in milliseconds
+const CACHE_DURATION = 1000 * 60 * 60;
 
-// Cache interface
+
 interface CacheEntry {
   result: boolean;
   timestamp: number;
 }
 
-// In-memory cache
 const contentCache: Map<string, CacheEntry> = new Map();
 
 export default function CreateCampaign() {
   const navigate = useNavigate();
   const { account, signer, provider } = useWeb3();
   const [loading, setLoading] = useState(false);
+  const [isModeratingContent, setIsModeratingContent] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof CampaignFormData, string>>>({});
   const [formData, setFormData] = useState<CampaignFormData>({
     title: '',
@@ -43,7 +43,6 @@ export default function CreateCampaign() {
   });
   const [contentError, setContentError] = useState('');
 
-  // Cache management functions
   const getCachedResult = (text: string): boolean | null => {
     const cached = contentCache.get(text);
     if (!cached) return null;
@@ -64,18 +63,20 @@ export default function CreateCampaign() {
     });
   };
 
-  // Content analysis with caching
-  const analyzeContent = useCallback(async (text: string, retryCount = 0): Promise<boolean> => {
-    // Check cache first
+  const analyzeContent = useCallback(async (text: string, retryCount = 0): Promise<{isAppropriate: boolean, error?: string}> => {
     const cachedResult = getCachedResult(text);
     if (cachedResult !== null) {
-      return cachedResult;
+      return { isAppropriate: cachedResult };
     }
 
     const apiKey = import.meta.env.VITE_GEMINI?.replace(/["']/g, '');
     
     if (!apiKey) {
-      throw new Error('Content analysis service is not properly configured');
+      console.error('Content analysis service is not properly configured - missing API key');
+      return { 
+        isAppropriate: true, 
+        error: 'Content moderation service is not available. Please check your settings or try again later.'
+      };
     }
 
     try {
@@ -96,7 +97,25 @@ Text: ${text}
 
 Reply with only "true" or "false".`
             }]
-          }]
+          }],
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_HATE_SPEECH",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            }
+          ]
         })
       });
 
@@ -109,25 +128,35 @@ Reply with only "true" or "false".`
         }
         // If we've exhausted retries, assume content is appropriate
         console.log('Rate limit retries exhausted, proceeding with content');
-        return true;
+        return { isAppropriate: true, error: 'Content moderation service is busy. Your content has been accepted.' };
       }
 
       if (!response.ok) {
         console.error('API error:', response.status, response.statusText);
         // For other errors, proceed with content
-        return true;
+        return { isAppropriate: true, error: 'Content moderation service encountered an error. Your content has been accepted.' };
       }
 
       const data = await response.json();
-      const result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim().toLowerCase() === 'true';
+      
+      // More robust parsing of the response
+      let result = true;
+      if (data.candidates && data.candidates.length > 0) {
+        const textResponse = data.candidates[0]?.content?.parts?.[0]?.text?.trim().toLowerCase();
+        if (textResponse === 'false') {
+          result = false;
+        } else if (textResponse !== 'true') {
+          console.warn('Unexpected response from content moderation API:', textResponse);
+        }
+      }
       
       // Cache the result
       setCachedResult(text, result);
-      return result;
+      return { isAppropriate: result };
     } catch (error) {
       console.error('Content analysis error:', error);
       // In case of errors, proceed with content
-      return true;
+      return { isAppropriate: true, error: 'Content moderation check failed. Your content has been accepted.' };
     }
   }, []);
 
@@ -172,6 +201,24 @@ Reply with only "true" or "false".`
     try {
       setLoading(true);
       setContentError('');
+
+      // Check content moderation for title and description
+      setIsModeratingContent(true);
+      const combinedText = `Title: ${formData.title.trim()}\nDescription: ${formData.description.trim()}`;
+      const { isAppropriate, error } = await analyzeContent(combinedText);
+      setIsModeratingContent(false);
+      
+      if (error) {
+        console.warn('Content moderation warning:', error);
+        // We can optionally show a non-blocking warning here
+        // setContentError(error);
+      }
+      
+      if (!isAppropriate) {
+        setContentError('Your campaign contains inappropriate content. Please revise and try again.');
+        setLoading(false);
+        return;
+      }
 
       // Create campaign
       if (!provider) {
@@ -333,7 +380,7 @@ Reply with only "true" or "false".`
                 {loading ? (
                   <div className="flex items-center justify-center">
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    Creating Campaign...
+                    {isModeratingContent ? 'Checking content...' : 'Creating Campaign...'}
                   </div>
                 ) : (
                   'Create Campaign'
