@@ -18,6 +18,7 @@ export default function Home() {
   const [loading, setLoading] = React.useState(true);
   const [status, setStatus] = useState<CampaignStatus>('all');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [isSepoliaNetwork, setIsSepoliaNetwork] = useState<boolean>(false);
   
   const { 
     searchQuery, 
@@ -27,9 +28,32 @@ export default function Home() {
     isSearching
   } = useSearch(campaigns);
 
+  // Check if connected to Sepolia
+  React.useEffect(() => {
+    const checkNetwork = async () => {
+      if (provider) {
+        try {
+          const network = await provider.getNetwork();
+          // Sepolia chainId is 11155111
+          setIsSepoliaNetwork(network.chainId === 11155111n);
+        } catch (error) {
+          console.error('Error checking network:', error);
+          setIsSepoliaNetwork(false);
+        }
+      } else {
+        setIsSepoliaNetwork(false);
+      }
+    };
+
+    checkNetwork();
+  }, [provider]);
+
   React.useEffect(() => {
     const fetchCampaigns = async () => {
-      if (!provider) return;
+      if (!provider || !isSepoliaNetwork) {
+        setLoading(false);
+        return;
+      }
       
       try {
         const contract = getContract(provider);
@@ -59,7 +83,7 @@ export default function Home() {
     };
 
     fetchCampaigns();
-  }, [provider]);
+  }, [provider, isSepoliaNetwork]);
 
   const filteredAndSortedCampaigns = React.useMemo(() => {
     let result = [...filteredItems];
@@ -93,20 +117,38 @@ export default function Home() {
   if (loading) {
     return (
       <main className="w-full md:px-10 py-5 min-h-screen p-5 mt-20 bg-gradient-to-b from-blue-300 to-white dark:from-blue-900 dark:to-gray-900 transition-colors duration-200">
-  <div className="flex flex-col justify-center items-center mt-28 space-y-10 h-64">
-    <Lottie
-      animationData={blockchainanimation}
-      loop={true}
-      autoplay={true}
-      style={{ height: 500, width: 500 }}
-      className="mt-10"
-    />
-    <h1 className="heading text-center text-2xl text-black dark:text-white font-bold px-5 transition-colors duration-200">
-      Connect your Metamask wallet, enable the test network, and select Sepolia to view the blogs.
-    </h1>
-  </div>
-</main>
+        <div className="flex flex-col justify-center items-center mt-28 space-y-10 h-64">
+          <Lottie
+            animationData={blockchainanimation}
+            loop={true}
+            autoplay={true}
+            style={{ height: 500, width: 500 }}
+            className="mt-10"
+          />
+          <h1 className="heading text-center text-2xl text-black dark:text-white font-bold px-5 transition-colors duration-200">
+            Connect your Metamask wallet, enable the test network, and select Sepolia to view the blogs.
+          </h1>
+        </div>
+      </main>
+    );
+  }
 
+  if (!isSepoliaNetwork) {
+    return (
+      <main className="w-full md:px-10 py-5 min-h-screen p-5 mt-20 bg-gradient-to-b from-blue-300 to-white dark:from-blue-900 dark:to-gray-900 transition-colors duration-200">
+        <div className="flex flex-col justify-center items-center mt-28 space-y-10 h-64">
+          <Lottie
+            animationData={blockchainanimation}
+            loop={true}
+            autoplay={true}
+            style={{ height: 500, width: 500 }}
+            className="mt-10"
+          />
+          <h1 className="heading text-center text-2xl text-black dark:text-white font-bold px-5 transition-colors duration-200">
+            Please connect to the Sepolia test network to view blogs.
+          </h1>
+        </div>
+      </main>
     );
   }
 
