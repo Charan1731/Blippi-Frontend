@@ -505,15 +505,12 @@ If the content is inappropriate, explain what specific part is inappropriate and
           type="error"
         >
           <div className="space-y-4">
-            <p className="text-gray-700 dark:text-gray-300">
-              We've detected inappropriate content in your campaign:
-            </p>
             <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-red-700 font-medium">Content Issue:</p>
               <p className="text-red-600 mt-2">{inappropriateContentDetails}</p>
             </div>
             <p className="text-gray-700 dark:text-gray-300">
-              Please review and revise your content to ensure it complies with our community guidelines.
+              Please revise your content to comply with our guidelines.
             </p>
             <div className="mt-6 flex justify-end">
               <button
