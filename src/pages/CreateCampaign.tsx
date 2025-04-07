@@ -38,6 +38,7 @@ export default function CreateCampaign() {
   const [errors, setErrors] = useState<Partial<Record<keyof CampaignFormData, string>>>({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showContentModerationModal, setShowContentModerationModal] = useState(false);
+  const [inappropriateContentDetails, setInappropriateContentDetails] = useState<string | null>(null);
   const [formData, setFormData] = useState<CampaignFormData>({
     title: '',
     description: '',
@@ -68,7 +69,7 @@ export default function CreateCampaign() {
     });
   };
 
-  const analyzeContent = useCallback(async (text: string, retryCount = 0): Promise<{isAppropriate: boolean, error?: string}> => {
+  const analyzeContent = useCallback(async (text: string, retryCount = 0): Promise<{isAppropriate: boolean, error?: string, details?: string}> => {
     const cachedResult = getCachedResult(text);
     if (cachedResult !== null) {
       return { isAppropriate: cachedResult };
@@ -100,7 +101,7 @@ export default function CreateCampaign() {
 
 Text: ${text}
 
-Reply with only "true" if appropriate or "false" if clearly inappropriate. When in doubt, reply with "true".`
+If the content is inappropriate, explain what specific part is inappropriate and why. If the content is appropriate, reply with "true".`
             }]
           }],
           safetySettings: [
@@ -137,32 +138,31 @@ Reply with only "true" if appropriate or "false" if clearly inappropriate. When 
 
       if (!response.ok) {
         console.error('API error:', response.status, response.statusText);
-
         return { isAppropriate: true, error: 'Content moderation service encountered an error. Your content has been accepted.' };
       }
 
       const data = await response.json();
       
-
       console.log('Gemini API response:', JSON.stringify(data, null, 2));
       
-
       let result = true;
+      let details = '';
       if (data.candidates && data.candidates.length > 0) {
-        const textResponse = data.candidates[0]?.content?.parts?.[0]?.text?.trim().toLowerCase();
+        const textResponse = data.candidates[0]?.content?.parts?.[0]?.text?.trim();
         console.log('Gemini text response:', textResponse);
         
-        if (textResponse === 'false') {
+        if (textResponse.toLowerCase() === 'true') {
+          result = true;
+        } else {
           result = false;
+          details = textResponse;
         }
       }
       
-
       setCachedResult(text, result);
-      return { isAppropriate: result };
+      return { isAppropriate: result, details: details };
     } catch (error) {
       console.error('Content analysis error:', error);
-
       return { isAppropriate: true, error: 'Content moderation check failed. Your content has been accepted.' };
     }
   }, []);
@@ -211,7 +211,7 @@ Reply with only "true" if appropriate or "false" if clearly inappropriate. When 
 
       setIsModeratingContent(true);
       const combinedText = `Title: ${formData.title.trim()}\nDescription: ${formData.description.trim()}`;
-      const { isAppropriate, error } = await analyzeContent(combinedText);
+      const { isAppropriate, error, details } = await analyzeContent(combinedText);
       setIsModeratingContent(false);
       
       if (error) {
@@ -220,6 +220,7 @@ Reply with only "true" if appropriate or "false" if clearly inappropriate. When 
       
       if (!isAppropriate) {
         setContentError('Your campaign contains inappropriate content. Please revise and try again.');
+        setInappropriateContentDetails(details || 'Your content contains inappropriate material.');
         setShowContentModerationModal(true);
         setLoading(false);
         return;
@@ -435,14 +436,12 @@ Reply with only "true" if appropriate or "false" if clearly inappropriate. When 
         >
           <div className="space-y-4">
             <p className="text-gray-700 dark:text-gray-300">
-              We've detected that your campaign content may contain inappropriate material. This could include:
+              We've detected inappropriate content in your campaign:
             </p>
-            <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-2">
-              <li>Hate speech or discriminatory content</li>
-              <li>Explicit adult content</li>
-              <li>Threats or violent content</li>
-              <li>Illegal activities or scams</li>
-            </ul>
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-700 font-medium">Content Issue:</p>
+              <p className="text-red-600 mt-2">{inappropriateContentDetails}</p>
+            </div>
             <p className="text-gray-700 dark:text-gray-300">
               Please review and revise your content to ensure it complies with our community guidelines.
             </p>
