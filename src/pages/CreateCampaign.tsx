@@ -37,6 +37,7 @@ export default function CreateCampaign() {
   const [isModeratingContent, setIsModeratingContent] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof CampaignFormData, string>>>({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showContentModerationModal, setShowContentModerationModal] = useState(false);
   const [formData, setFormData] = useState<CampaignFormData>({
     title: '',
     description: '',
@@ -219,6 +220,7 @@ Reply with only "true" if appropriate or "false" if clearly inappropriate. When 
       
       if (!isAppropriate) {
         setContentError('Your campaign contains inappropriate content. Please revise and try again.');
+        setShowContentModerationModal(true);
         setLoading(false);
         return;
       }
@@ -310,6 +312,10 @@ Reply with only "true" if appropriate or "false" if clearly inappropriate. When 
     if (errors[inputId as keyof CampaignFormData]) {
       setErrors(prev => ({ ...prev, [inputId]: '' }));
     }
+  };
+
+  const handleCloseContentModerationModal = () => {
+    setShowContentModerationModal(false);
   };
 
   return (
@@ -419,6 +425,37 @@ Reply with only "true" if appropriate or "false" if clearly inappropriate. When 
             <CampaignPreview data={formData} />
           </div>
         </div>
+
+        {/* Content Moderation Modal */}
+        <Modal
+          isOpen={showContentModerationModal}
+          onClose={handleCloseContentModerationModal}
+          title="Inappropriate Content Detected"
+          type="error"
+        >
+          <div className="space-y-4">
+            <p className="text-gray-700 dark:text-gray-300">
+              We've detected that your campaign content may contain inappropriate material. This could include:
+            </p>
+            <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-2">
+              <li>Hate speech or discriminatory content</li>
+              <li>Explicit adult content</li>
+              <li>Threats or violent content</li>
+              <li>Illegal activities or scams</li>
+            </ul>
+            <p className="text-gray-700 dark:text-gray-300">
+              Please review and revise your content to ensure it complies with our community guidelines.
+            </p>
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={handleCloseContentModerationModal}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                I Understand
+              </button>
+            </div>
+          </div>
+        </Modal>
 
         {/* Success Modal */}
         <Modal
