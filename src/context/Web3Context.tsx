@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ethers } from 'ethers';
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
 
 interface Web3ContextType {
   account: string | null;
@@ -15,49 +16,41 @@ export function Web3Provider({ children }: { children: React.ReactNode }) {
   const [account, setAccount] = useState<string | null>(null);
   const [provider, setProvider] = useState<ethers.Provider | null>(null);
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
+  
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
 
   useEffect(() => {
-    const checkConnection = async () => {
+    if (isConnected && address) {
+      setAccount(address);
+      
       if (window.ethereum) {
         const provider = new ethers.BrowserProvider(window.ethereum);
         setProvider(provider);
         
-        try {
-          const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-          if (accounts.length > 0) {
-            setAccount(accounts[0]);
-            const signer = await provider.getSigner();
-            setSigner(signer);
-          }
-        } catch (error) {
-          console.error('Error checking connection:', error);
-        }
-      }
-    };
-
-    checkConnection();
-  }, []);
-
-  const connectWallet = async () => {
-    if (window.ethereum) {
-      try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        setAccount(accounts[0]);
-        
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        setProvider(provider);
-        
-        const signer = await provider.getSigner();
-        setSigner(signer);
-      } catch (error) {
-        console.error('Error connecting wallet:', error);
+        provider.getSigner().then(signer => {
+          setSigner(signer);
+        }).catch(error => {
+          console.error('Error getting signer:', error);
+        });
       }
     } else {
-      alert('Please install MetaMask!');
+      setAccount(null);
+      setSigner(null);
+    }
+  }, [isConnected, address]);
+
+  // This is called by our existing UI, but we'll now use RainbowKit's connect modal
+  const connectWallet = async () => {
+    // The actual connection happens through RainbowKit's UI
+    // This function is now just a placeholder for compatibility
+    if (!window.ethereum) {
+      alert('Please install MetaMask or use another wallet!');
     }
   };
 
   const disconnectWallet = () => {
+    disconnect();
     setAccount(null);
     setSigner(null);
   };
