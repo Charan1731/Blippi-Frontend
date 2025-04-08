@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { formatEther } from 'ethers';
 import { Calendar, Target, Users, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { useWeb3 } from '../../../context/Web3Context';
+import ProgressBar from '../ProgressBar';
 import type { Campaign } from '../../../types/campaign';
 
 interface CampaignHeaderProps {
@@ -13,19 +14,36 @@ interface CampaignHeaderProps {
 }
 
 export default function CampaignHeader({ campaign, campaignId, onDelete }: CampaignHeaderProps) {
-  const progress = Number(campaign.amountCollected) / Number(campaign.target) * 100;
+  const progress = Math.min(Number(campaign.amountCollected) / Number(campaign.target) * 100, 100);
   const { account } = useWeb3();
   const navigate = useNavigate();
+  const [imageLoaded, setImageLoaded] = useState(false);
   
   const isOwner = account && campaign.owner.toLowerCase() === account.toLowerCase();
   
+  // High quality default image with larger dimensions
+  const defaultImage = 'https://images.unsplash.com/photo-1497493292307-31c376b6e479?auto=format&fit=crop&w=2400&q=90';
+  
   return (
     <div className="relative mt-10 overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500/5 to-purple-500/5 backdrop-blur-sm">
-      <div className="aspect-[21/9] overflow-hidden rounded-t-2xl">
+      <div className="aspect-[21/9] overflow-hidden rounded-t-2xl relative">
+        {/* Blur-up placeholder */}
+        <div 
+          className={`absolute inset-0 bg-gray-200 dark:bg-gray-700 transition-opacity duration-300 ${
+            imageLoaded ? 'opacity-0' : 'opacity-100'
+          }`}
+        />
+        
         <img
-          src={campaign.image || 'https://images.unsplash.com/photo-1497493292307-31c376b6e479?auto=format&fit=crop&w=1600'}
+          src={campaign.image || defaultImage}
           alt={campaign.title}
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover transition-opacity duration-300 ${
+            imageLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+          loading="eager"
+          decoding="async"
+          onLoad={() => setImageLoaded(true)}
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
         />
       </div>
       
@@ -55,36 +73,46 @@ export default function CampaignHeader({ campaign, campaignId, onDelete }: Campa
           )}
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 flex items-center gap-3">
-            <div className="p-2 bg-blue-500/10 rounded-lg">
-              <Target className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-500 dark:text-gray-400">Progress</span>
+              <span className="font-medium text-gray-900 dark:text-white">{progress.toFixed(1)}%</span>
             </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Target</p>
-              <p className="font-display font-semibold dark:text-blue-400">{formatEther(campaign.target)} ETH</p>
-            </div>
+            <ProgressBar progress={progress} />
           </div>
           
-          <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 flex items-center gap-3">
-            <div className="p-2 bg-purple-500/10 rounded-lg">
-              <Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 flex items-center gap-3">
+              <div className="p-2 bg-blue-500/10 rounded-lg">
+                <Target className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Target</p>
+                <p className="font-display font-semibold dark:text-blue-400">{formatEther(campaign.target)} ETH</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Backers</p>
-              <p className="font-display font-semibold dark:text-purple-400">{campaign.donators.length}</p>
+            
+            <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 flex items-center gap-3">
+              <div className="p-2 bg-purple-500/10 rounded-lg">
+                <Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Backers</p>
+                <p className="font-display font-semibold dark:text-purple-400">{campaign.donators.length}</p>
+              </div>
             </div>
-          </div>
-          
-          <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 flex items-center gap-3">
-            <div className="p-2 bg-green-500/10 rounded-lg">
-              <Calendar className="w-6 h-6 text-green-600 dark:text-green-400" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">End Date</p>
-              <p className="font-display font-semibold dark:text-green-400">
-                {format(Number(campaign.deadline) * 1000, 'MMM dd, yyyy')}
-              </p>
+            
+            <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 flex items-center gap-3">
+              <div className="p-2 bg-green-500/10 rounded-lg">
+                <Calendar className="w-6 h-6 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">End Date</p>
+                <p className="font-display font-semibold dark:text-green-400">
+                  {format(Number(campaign.deadline) * 1000, 'MMM dd, yyyy')}
+                </p>
+              </div>
             </div>
           </div>
         </div>
