@@ -7,10 +7,12 @@ import CampaignHeader from '../components/campaign/details/CampaignHeader';
 import DonationForm from '../components/campaign/details/DonationForm';
 import DonationList from '../components/campaign/details/DonationList';
 import type { Campaign } from '../types/campaign';
-import MDEditor  from '@uiw/react-md-editor';
+import MDEditor from '@uiw/react-md-editor';
 import Modal from '../components/Modal';
 import SuccessConfirmation from '../components/SuccessConfirmation';
 import DeleteConfirmation from '../components/DeleteConfirmation';
+import { motion } from 'framer-motion';
+import { Clock, ArrowLeft, Heart, Share2, MessageCircle, Users, Sparkles } from 'lucide-react';
 
 export default function CampaignDetails() {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +25,8 @@ export default function CampaignDetails() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDonationSuccess, setShowDonationSuccess] = useState(false);
   const [lastDonationAmount, setLastDonationAmount] = useState('');
+  const [likeCount, setLikeCount] = useState(0);
+  const [hasLiked, setHasLiked] = useState(false);
 
   useEffect(() => {
     const fetchCampaign = async () => {
@@ -53,6 +57,9 @@ export default function CampaignDetails() {
           donators: campaignData.donators || [],
           donations: campaignData.donations || []
         });
+
+        // Set random initial like count (would come from backend in real app)
+        setLikeCount(Math.floor(Math.random() * 50) + 5);
       } catch (error) {
         console.error('Error fetching campaign:', error);
       } finally {
@@ -136,18 +143,70 @@ export default function CampaignDetails() {
     }
   };
 
+  const handleLike = () => {
+    if (hasLiked) {
+      setLikeCount(prev => prev - 1);
+    } else {
+      setLikeCount(prev => prev + 1);
+    }
+    setHasLiked(!hasLiked);
+  };
+
+  const fadeIn = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.5 }
+    }
+  };
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50/30 to-white dark:from-gray-900 dark:via-blue-900/20 dark:to-gray-800 flex justify-center items-center">
+        <div className="text-center">
+          <div className="inline-block p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-xl">
+            <div className="w-16 h-16 border-4 border-blue-600/30 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-300 font-medium">Loading campaign details...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!campaign) {
     return (
-      <div className="text-center text-gray-600 dark:text-gray-400 min-h-[60vh] flex items-center justify-center">
-        Campaign not found
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50/30 to-white dark:from-gray-900 dark:via-blue-900/20 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-center bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl p-8 shadow-xl max-w-md">
+          <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-red-100 dark:bg-red-900/30 rounded-full">
+            <Clock className="w-8 h-8 text-red-600 dark:text-red-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            Campaign Not Found
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            This campaign may have been deleted or does not exist.
+          </p>
+          <motion.button 
+            onClick={() => navigate('/')}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.98 }}
+            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg flex items-center justify-center gap-2 mx-auto"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Return to Home</span>
+          </motion.button>
+        </div>
       </div>
     );
   }
@@ -158,8 +217,19 @@ export default function CampaignDetails() {
     timestamp: Date.now() - (index * 1000 * 60 * 60) // Simulated timestamps
   }));
 
+  // Calculate campaign stats
+  const progress = Math.min(Number(campaign.amountCollected) / Number(campaign.target) * 100, 100);
+  const isActive = Number(campaign.deadline) * 1000 > Date.now();
+  const timeLeft = isActive ? Math.floor((Number(campaign.deadline) * 1000 - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
+  const amountRaised = formatEther(campaign.amountCollected);
+  const targetAmount = formatEther(campaign.target);
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50/30 to-white dark:from-gray-900 dark:via-blue-900/20 dark:to-gray-800 transition-colors duration-300">
+      {/* Decorative elements */}
+      <div className="absolute top-24 right-10 w-72 h-72 bg-purple-300/30 dark:bg-purple-500/10 rounded-full filter blur-3xl opacity-70 animate-pulse"></div>
+      <div className="absolute bottom-24 left-10 w-72 h-72 bg-blue-300/30 dark:bg-blue-500/10 rounded-full filter blur-3xl opacity-70 animate-pulse"></div>
+      
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={showDeleteConfirm}
@@ -189,39 +259,234 @@ export default function CampaignDetails() {
           onAction={handleDonationSuccessClose}
         />
       </Modal>
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
-        <CampaignHeader 
-          campaign={campaign} 
-          campaignId={id!} 
-          onDelete={handleDeleteConfirm} 
-        />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6">
-              <h3 className="font-display text-xl font-semibold mb-4 dark:text-blue-400">About this campaign</h3>
-              <div data-color-mode="light" className="prose prose-sm max-w-none dark:prose-invert">
-                <MDEditor.Markdown 
-                  source={campaign.description} 
-                  style={{ whiteSpace: 'pre-wrap' }}
-                  className='bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm dark:text-white p-4 rounded-lg'
-                />
-              </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-16 relative z-10">
+        {/* <motion.button 
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 mb-6 transition-colors duration-200"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3 }}
+          whileHover={{ x: -5 }}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to all campaigns
+        </motion.button> */}
+
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainer}
+          className="space-y-8 mt-16"
+        >
+          {/* Main campaign header */}
+          <motion.div variants={fadeIn}>
+            <CampaignHeader 
+              campaign={campaign} 
+              campaignId={id!} 
+              onDelete={handleDeleteConfirm} 
+            />
+          </motion.div>
+
+          {/* Campaign engagement metrics */}
+          <motion.div 
+            variants={fadeIn}
+            className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 shadow-lg flex flex-wrap justify-between items-center gap-4"
+          >
+            <div className="flex items-center gap-6">
+              <button 
+                onClick={handleLike}
+                className={`flex items-center gap-1.5 transition-all duration-200 ${
+                  hasLiked 
+                    ? 'text-pink-600 dark:text-pink-400 scale-110' 
+                    : 'text-gray-500 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-400'
+                }`}
+              >
+                <Heart className={`w-5 h-5 ${hasLiked ? 'fill-pink-600 dark:fill-pink-400' : ''} transition-all duration-300`} />
+                <span className="font-medium">{likeCount}</span>
+              </button>
+
+              <button className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">
+                <MessageCircle className="w-5 h-5" />
+                <span className="font-medium">{campaign.donators.length}</span>
+              </button>
+
+              <button className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors duration-200">
+                <Share2 className="w-5 h-5" />
+                <span className="font-medium">Share</span>
+              </button>
             </div>
             
-            <DonationList donations={donations} />
-          </div>
-          
-          <div className="lg:col-span-1">
-            <div className="sticky top-24">
-              <DonationForm
-                campaignId={id!}
-                onDonate={handleDonate}
-              />
+            <div className="flex items-center">
+              <div className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${
+                isActive 
+                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' 
+                  : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+              }`}>
+                <Clock className="w-3 h-3" />
+                {isActive 
+                  ? `${timeLeft} days left` 
+                  : 'Campaign ended'
+                }
+              </div>
             </div>
+          </motion.div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <motion.div 
+              className="lg:col-span-2 space-y-8"
+              variants={fadeIn}
+            >
+              {/* Campaign description */}
+              <motion.div 
+                className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-2xl p-8 shadow-xl"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-yellow-500" />
+                  About this campaign
+                </h3>
+                <div data-color-mode="light" className="prose prose-blue max-w-none dark:prose-invert">
+                  <MDEditor.Markdown 
+                    source={campaign.description} 
+                    style={{ whiteSpace: 'pre-wrap' }}
+                    className='bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm dark:text-white p-6 rounded-lg'
+                  />
+                </div>
+              </motion.div>
+              
+              {/* Campaign stats */}
+              <motion.div 
+                className="grid grid-cols-1 md:grid-cols-3 gap-4"
+                variants={staggerContainer}
+                initial="hidden"
+                animate="visible"
+              >
+                <motion.div 
+                  variants={fadeIn}
+                  className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-6 shadow-lg"
+                >
+                  <div className="text-center">
+                    <div className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                      {amountRaised}
+                    </div>
+                    <p className="text-gray-500 dark:text-gray-400 mt-1">ETH Raised</p>
+                    <div className="mt-3 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <motion.div 
+                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-500"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress}%` }}
+                        transition={{ duration: 1, delay: 0.5 }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      {progress.toFixed(1)}% of {targetAmount} ETH
+                    </p>
+                  </div>
+                </motion.div>
+                
+                <motion.div 
+                  variants={fadeIn}
+                  className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-6 shadow-lg"
+                >
+                  <div className="text-center">
+                    <div className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      {campaign.donators.length}
+                    </div>
+                    <p className="text-gray-500 dark:text-gray-400 mt-1">Supporters</p>
+                    <div className="mt-3 flex justify-center">
+                      <div className="flex -space-x-2">
+                        {[...Array(Math.min(5, campaign.donators.length))].map((_, i) => (
+                          <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                            {i < 4 ? i + 1 : `+${campaign.donators.length - 4}`}
+                          </div>
+                        ))}
+                        {campaign.donators.length === 0 && (
+                          <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                            <Users className="w-4 h-4 text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+                
+                <motion.div 
+                  variants={fadeIn}
+                  className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-6 shadow-lg"
+                >
+                  <div className="text-center">
+                    <div className="text-4xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
+                      {timeLeft > 0 ? timeLeft : 0}
+                    </div>
+                    <p className="text-gray-500 dark:text-gray-400 mt-1">Days {isActive ? 'Left' : 'Ended'}</p>
+                    <div className="mt-3 flex justify-center">
+                      <div className={`px-4 py-1 rounded-full text-xs font-medium ${
+                        isActive 
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' 
+                          : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                      }`}>
+                        {isActive ? 'Active Campaign' : 'Campaign Ended'}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+              
+              {/* Donation list with animation */}
+              <motion.div 
+                variants={fadeIn}
+                className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-2xl p-8 shadow-xl"
+              >
+                <DonationList donations={donations} />
+              </motion.div>
+            </motion.div>
+            
+            <motion.div 
+              className="lg:col-span-1"
+              variants={fadeIn}
+            >
+              <div className="sticky top-24">
+                <motion.div 
+                  className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-2xl p-8 shadow-xl"
+                  whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                >
+                  <DonationForm
+                    campaignId={id!}
+                    onDonate={handleDonate}
+                  />
+                </motion.div>
+                
+                {/* Campaign owner info */}
+                <motion.div 
+                  className="mt-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-2xl p-6 shadow-xl"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                >
+                  <h3 className="font-bold text-gray-900 dark:text-white mb-4">
+                    Campaign Creator
+                  </h3>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                      {campaign.owner.slice(2, 4).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {`${campaign.owner.slice(0, 6)}...${campaign.owner.slice(-4)}`}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Campaign Creator
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

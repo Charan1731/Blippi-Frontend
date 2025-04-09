@@ -8,6 +8,8 @@ import CampaignPreview from '../components/campaign/CampaignPreview';
 import MDEditor from '@uiw/react-md-editor';
 import Modal from '../components/Modal';
 import SuccessConfirmation from '../components/SuccessConfirmation';
+import { motion } from 'framer-motion';
+import { ShieldCheck, Image, Rocket, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface CampaignFormData {
   title: string;
@@ -48,6 +50,8 @@ export default function CreateCampaign() {
   });
   const [contentError, setContentError] = useState('');
   const [newCampaignId, setNewCampaignId] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<string>('basic');
+  const [validationAttempted, setValidationAttempted] = useState(false);
 
   const getCachedResult = (text: string): boolean | null => {
     const cached = contentCache.get(text);
@@ -192,8 +196,10 @@ If the content is inappropriate, explain what specific part is inappropriate and
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [formData]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationAttempted(true);
     
     if (!account || !signer) {
       setContentError('Please connect your wallet first');
@@ -201,13 +207,16 @@ If the content is inappropriate, explain what specific part is inappropriate and
     }
 
     if (!validateForm()) {
+      // If we're in the basic tab and there are errors, stay there
+      if (activeSection === 'media' && (errors.title || errors.description || errors.target || errors.deadline)) {
+        setActiveSection('basic');
+      }
       return;
     }
 
     try {
       setLoading(true);
       setContentError('');
-
 
       setIsModeratingContent(true);
       const combinedText = `Title: ${formData.title.trim()}\nDescription: ${formData.description.trim()}`;
@@ -319,113 +328,307 @@ If the content is inappropriate, explain what specific part is inappropriate and
     setShowContentModerationModal(false);
   };
 
+  // Animation variants
+  const fadeIn = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+  };
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  // Check if form is ready for submission
+  const isFormComplete = formData.title && formData.description && formData.target && formData.deadline;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid mt-10 lg:grid-cols-2 gap-8">
-          <div className="space-y-8">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-                Create Campaign
-              </h1>
-              <p className="mt-2 text-gray-600 dark:text-gray-300">
-                Share your story and start raising funds for your cause.
-              </p>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50/30 to-white dark:from-gray-900 dark:via-blue-900/20 dark:to-gray-800 transition-colors duration-300">
+      {/* Decorative elements */}
+      <div className="absolute top-24 right-10 w-72 h-72 bg-purple-300/30 dark:bg-purple-500/10 rounded-full filter blur-3xl opacity-70 animate-pulse"></div>
+      <div className="absolute bottom-24 left-10 w-72 h-72 bg-blue-300/30 dark:bg-blue-500/10 rounded-full filter blur-3xl opacity-70 animate-pulse"></div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+        <motion.div 
+          className="text-center mb-10"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h1 className="text-5xl mt-10 font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            Create Your Campaign
+          </h1>
+          <p className="mt-4 text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            Share your story, set your funding goal, and start making a difference today.
+          </p>
+        </motion.div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <FloatingInput
-                id="title"
-                type="text"
-                label="Campaign Title"
-                value={formData.title}
-                onChange={handleInputChange}
-                error={errors.title}
-                maxLength={100}
-              />
-
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Campaign Description
-                </label>
-                <div data-color-mode="light" className="w-full">
-                  <MDEditor
-                    value={formData.description}
-                    onChange={(value) => handleInputChange(value || '', 'description')}
-                    preview="edit"
-                    height={300}
-                    className='dark:bg-gray-800/50 dark:text-white p-4 rounded-lg'
+        <motion.div 
+          className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl p-8 shadow-xl border border-gray-200/50 dark:border-gray-700/50"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <div className="grid lg:grid-cols-2 gap-10">
+            <motion.div 
+              className="space-y-8"
+              variants={staggerContainer}
+              initial="hidden"
+              animate="visible"
+            >
+              {/* Form Progress */}
+              <div className="w-full">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Campaign setup progress
+                  </p>
+                  <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+                    {isFormComplete ? 'Ready to submit!' : 'Complete all fields'}
+                  </span>
+                </div>
+                <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"
+                    initial={{ width: '0%' }}
+                    animate={{ 
+                      width: formData.title ? 
+                        (formData.description ? 
+                          (formData.target ? 
+                            (formData.deadline ? '100%' : '75%') 
+                            : '50%') 
+                          : '25%') 
+                        : '0%' 
+                    }}
+                    transition={{ duration: 0.5 }}
                   />
                 </div>
-                {errors.description && (
-                  <p className="text-sm text-red-600">{errors.description}</p>
-                )}
               </div>
 
-              <FloatingInput
-                id="target"
-                type="number"
-                step="0.01"
-                min="0"
-                label="Target Amount (ETH)"
-                value={formData.target}
-                onChange={handleInputChange}
-                error={errors.target}
-              />
+              {/* Navigation Tabs */}
+              <div className="flex space-x-4 border-b border-gray-200 dark:border-gray-700 pb-4">
+                <button 
+                  onClick={() => setActiveSection('basic')}
+                  className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-all ${
+                    activeSection === 'basic' 
+                      ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-medium'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50'
+                  }`}
+                >
+                  <Rocket className="w-4 h-4" />
+                  <span>Campaign Details</span>
+                  {validationAttempted && (errors.title || errors.description || errors.target || errors.deadline) && (
+                    <span className="flex h-2 w-2 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    </span>
+                  )}
+                </button>
+                <button 
+                  onClick={() => setActiveSection('media')}
+                  className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-all ${
+                    activeSection === 'media' 
+                      ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-medium'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50'
+                  }`}
+                >
+                  <Image className="w-4 h-4" />
+                  <span>Media</span>
+                  {validationAttempted && activeSection !== 'media' && !formData.image && (
+                    <span className="flex h-2 w-2 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
+                    </span>
+                  )}
+                </button>
+              </div>
 
-              <FloatingInput
-                id="deadline"
-                type="date"
-                label="End Date"
-                min={new Date().toISOString().split('T')[0]}
-                value={formData.deadline}
-                onChange={handleInputChange}
-                error={errors.deadline}
-              />
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {activeSection === 'basic' && (
+                  <motion.div 
+                    className="space-y-6"
+                    variants={staggerContainer}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    <motion.div variants={fadeIn}>
+                      <FloatingInput
+                        id="title"
+                        type="text"
+                        label="Campaign Title"
+                        value={formData.title}
+                        onChange={handleInputChange}
+                        error={errors.title}
+                        maxLength={100}
+                        className="bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm"
+                      />
+                      {formData.title && !errors.title && (
+                        <div className="flex items-center mt-1 text-green-600 dark:text-green-400 text-xs">
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          <span>Great title! It's memorable and descriptive.</span>
+                        </div>
+                      )}
+                    </motion.div>
 
-              <FloatingInput
-                id="image"
-                type="url"
-                label="Campaign Image URL"
-                value={formData.image}
-                onChange={handleInputChange}
-                placeholder=""
-              />
+                    <motion.div variants={fadeIn} className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Campaign Description
+                      </label>
+                      <div data-color-mode="light" className="w-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <MDEditor
+                          value={formData.description}
+                          onChange={(value) => handleInputChange(value || '', 'description')}
+                          preview="edit"
+                          height={300}
+                          className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm dark:text-white rounded-lg"
+                        />
+                      </div>
+                      {errors.description && (
+                        <p className="text-sm text-red-600 flex items-center">
+                          <AlertCircle className="w-4 h-4 mr-1" />
+                          {errors.description}
+                        </p>
+                      )}
+                      {formData.description && !errors.description && (
+                        <div className="flex items-center mt-1 text-green-600 dark:text-green-400 text-xs">
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          <span>{formData.description.length < 200 ? 'Consider adding more details to your description.' : 'Great description! It provides good details about your campaign.'}</span>
+                        </div>
+                      )}
+                    </motion.div>
 
-              {contentError && (
-                <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
-                  {contentError}
-                </div>
-              )}
+                    <motion.div variants={fadeIn}>
+                      <FloatingInput
+                        id="target"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        label="Target Amount (ETH)"
+                        value={formData.target}
+                        onChange={handleInputChange}
+                        error={errors.target}
+                        className="bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm"
+                      />
+                    </motion.div>
 
-              <button
-                type="submit"
-                disabled={loading || !account}
-                className={`
-                  w-full py-3 px-6 rounded-xl text-white font-medium
-                  bg-gradient-to-r from-blue-600 to-indigo-600
-                  hover:from-blue-700 hover:to-indigo-700
-                  focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                  transition-all duration-200 transform hover:-translate-y-0.5
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                  relative overflow-hidden
-                `}
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    {isModeratingContent ? 'Checking content...' : 'Creating Campaign...'}
-                  </div>
-                ) : (
-                  'Create Campaign'
+                    <motion.div variants={fadeIn}>
+                      <FloatingInput
+                        id="deadline"
+                        type="date"
+                        label="End Date"
+                        min={new Date().toISOString().split('T')[0]}
+                        value={formData.deadline}
+                        onChange={handleInputChange}
+                        error={errors.deadline}
+                        className="bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm"
+                      />
+                    </motion.div>
+                  </motion.div>
                 )}
-              </button>
-            </form>
+
+                {activeSection === 'media' && (
+                  <motion.div 
+                    className="space-y-6"
+                    variants={staggerContainer}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    <motion.div variants={fadeIn}>
+                      <FloatingInput
+                        id="image"
+                        type="url"
+                        label="Campaign Image URL"
+                        value={formData.image}
+                        onChange={handleInputChange}
+                        placeholder=""
+                        className="bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm"
+                      />
+                      <p className="mt-1 text-gray-500 dark:text-gray-400 text-xs italic">
+                        {formData.image ? 'Image preview will appear on the right panel' : 'Image is optional but highly recommended for better engagement'}
+                      </p>
+                    </motion.div>
+
+                    <motion.div variants={fadeIn} className="mt-4 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <div className="flex items-start space-x-3">
+                        <div className="bg-blue-100 dark:bg-blue-800/50 p-2 rounded-full">
+                          <Image className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-blue-800 dark:text-blue-300">Image Guidelines</h3>
+                          <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
+                            Use high-quality images (1200×630px recommended) that represent your campaign. 
+                            Ensure you have rights to use any images you upload.
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+
+                {contentError && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-start space-x-3"
+                  >
+                    <AlertCircle className="w-5 h-5 text-red-500 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Error</p>
+                      <p>{contentError}</p>
+                    </div>
+                  </motion.div>
+                )}
+
+                <div className="flex items-center pt-4 mt-6 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex-1 flex items-center text-sm text-blue-600 dark:text-blue-400">
+                    <ShieldCheck className="w-4 h-4 mr-2" />
+                    <span>Content will be reviewed for community guidelines</span>
+                  </div>
+                  <motion.button
+                    type="submit"
+                    disabled={loading || !account}
+                    className={`
+                      py-3 px-8 rounded-xl text-white font-medium
+                      bg-gradient-to-r from-blue-600 to-indigo-600
+                      hover:from-blue-700 hover:to-indigo-700
+                      focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                      transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg
+                      disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none
+                      relative overflow-hidden
+                    `}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {loading ? (
+                      <div className="flex items-center justify-center">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        {isModeratingContent ? 'Checking content...' : 'Creating Campaign...'}
+                      </div>
+                    ) : (
+                      'Create Campaign'
+                    )}
+                  </motion.button>
+                </div>
+              </form>
+            </motion.div>
+
+            <motion.div 
+              className="hidden lg:block"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <div className="sticky top-20">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Campaign Preview</h3>
+                <CampaignPreview data={formData} />
+              </div>
+            </motion.div>
           </div>
-          <div className="hidden lg:block">
-            <CampaignPreview data={formData} />
-          </div>
-        </div>
+        </motion.div>
 
         {/* Content Moderation Modal */}
         <Modal
@@ -445,7 +648,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
             <div className="mt-6 flex justify-end">
               <button
                 onClick={handleCloseContentModerationModal}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 I Understand
               </button>

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, FileText, PenTool, Copy, Moon, Sun, Edit2, Eye } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Loader2, FileText, PenTool, Copy, CheckCircle, Edit2, Eye, Zap, Sparkles, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import AnimatedText from '../components/AnimatedText';
 import MDEditor from '@uiw/react-md-editor';
+import { useTheme } from '../context/ThemeContext';
 
 const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
 
@@ -13,36 +14,17 @@ const BlogGenerator = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isCopied, setIsCopied] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState('');
   const [showAnimatedText, setShowAnimatedText] = useState(false);
+  const { theme } = useTheme();
 
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-  };
-
-  // Apply dark mode class to the root element
+  // Update editedContent when new content is generated
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    if (generatedContent) {
+      setEditedContent(generatedContent);
     }
-  }, [isDarkMode]);
-
-  // Function to clean markdown formatting
-  const cleanMarkdownFormatting = (text: string) => {
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
-      .replace(/\*(.*?)\*/g, '$1')     // Remove italic
-      .replace(/_{2}(.*?)_{2}/g, '$1') // Remove underscore bold
-      .replace(/_(.*?)_/g, '$1')       // Remove underscore italic
-      .replace(/`(.*?)`/g, '$1')       // Remove inline code
-      .replace(/^>+\s*/gm, '')         // Remove blockquotes
-      .trim();
-  };
+  }, [generatedContent]);
 
   const handleGenerateBlog = async () => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.replace(/["']/g, '');
@@ -176,13 +158,6 @@ Return only the **fully written blog post** in Markdown format without explainin
     }
   };
 
-  // Update editedContent when new content is generated
-  useEffect(() => {
-    if (generatedContent) {
-      setEditedContent(generatedContent);
-    }
-  }, [generatedContent]);
-
   // Modified copy handler to use edited content
   const handleCopyToClipboard = async () => {
     const contentToCopy = isEditing ? editedContent : generatedContent;
@@ -198,210 +173,313 @@ Return only the **fully written blog post** in Markdown format without explainin
     }
   };
 
-  return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-white via-indigo-50 to-indigo-100 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-x-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
+  // Animation variants
+  const fadeIn = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+  };
 
-        {/* Gradient blobs */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-r from-indigo-200 to-purple-200 dark:from-indigo-800 dark:to-purple-800 rounded-full opacity-30 blur-3xl -z-10 animate-blob" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-gradient-to-r from-indigo-200 to-pink-200 dark:from-indigo-800 dark:to-pink-800 rounded-full opacity-30 blur-3xl -z-10 animate-blob animation-delay-2000" />
-        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-gradient-to-r from-purple-200 to-indigo-200 dark:from-purple-800 dark:to-indigo-800 rounded-full opacity-20 blur-3xl -z-10 animate-blob animation-delay-4000" />
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50/30 to-white dark:from-gray-900 dark:via-blue-900/20 dark:to-gray-800 transition-colors duration-300 pt-24 pb-16 overflow-x-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-1/4 w-72 h-72 bg-blue-300/20 dark:bg-blue-500/10 rounded-full filter blur-3xl opacity-70 animate-pulse"></div>
+        <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-indigo-300/20 dark:bg-indigo-500/10 rounded-full filter blur-3xl opacity-70 animate-pulse" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute bottom-0 right-0 w-72 h-72 bg-purple-300/20 dark:bg-purple-500/10 rounded-full filter blur-3xl opacity-70 animate-pulse" style={{ animationDelay: '4s' }}></div>
 
         {/* Header Section */}
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center"
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainer}
+          className="text-center mb-16"
         >
           <motion.h1 
-            className="text-4xl mt-10 tracking-tight font-extrabold text-gray-900 dark:text-white sm:text-5xl md:text-6xl"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            variants={fadeIn}
+            className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl md:text-6xl"
           >
-            <span className="block">AI-Powered Blog Generator</span>
-            <span className="block bg-blue-600 dark:bg-blue-600 bg-clip-text text-transparent">
-              Create Engaging Content
+            <span className="block mb-2">AI-Powered</span>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400">
+              Blog Generator
             </span>
           </motion.h1>
           
           <motion.p 
-            className="mt-3 max-w-md mx-auto text-base text-gray-600 dark:text-gray-400 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
+            variants={fadeIn}
+            className="mt-4 max-w-2xl mx-auto text-xl text-gray-600 dark:text-gray-300"
           >
-            Enter a topic and description to generate a professional blog post.
+            Create compelling blog posts to boost your crowdfunding campaigns
           </motion.p>
         </motion.div>
 
-        <div className="mt-12 max-w-3xl mx-auto">
-          <div className="grid grid-cols-1 gap-8">
-            <motion.div 
-              className="space-y-8"
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1 }}
-            >
-              <div className="pt-6">
-                <div className="flow-root bg-white dark:bg-gray-800 rounded-lg px-6 pb-8 shadow-md hover:shadow-xl transition-shadow duration-300">
-                  <div className="-mt-6">
-                    <span className="inline-flex items-center justify-center p-3 bg-blue-600 rounded-md shadow-lg transform transition hover:scale-110">
-                      <PenTool className="h-8 w-8 text-white" />
-                    </span>
-                    <h3 className="mt-8 text-lg font-medium text-gray-900 dark:text-white tracking-tight">Blog Topic</h3>
-                    <input
-                      type="text"
-                      value={topic}
-                      onChange={(e) => setTopic(e.target.value)}
-                      className="w-full p-3 mt-5 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 dark:bg-gray-700 dark:text-white"
-                      placeholder="Enter your blog topic..."
-                    />
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 relative z-10">
+          {/* Input Section */}
+          <motion.div 
+            className="md:col-span-2 space-y-6"
+            initial="hidden"
+            animate="visible"
+            variants={staggerContainer}
+          >
+            <motion.div variants={fadeIn} className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-20"></div>
+              <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-md p-6 rounded-xl shadow-xl border border-gray-200/50 dark:border-gray-700/50">
+                <div className="flex items-center mb-4">
+                  <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg shadow-md mr-3">
+                    <PenTool className="h-6 w-6 text-white" />
                   </div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Blog Topic</h3>
                 </div>
+                <input
+                  type="text"
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  className="w-full p-3 bg-white/80 dark:bg-gray-700/80 border border-gray-300/60 dark:border-gray-600/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 dark:text-white shadow-sm"
+                  placeholder="Enter your blog topic..."
+                />
               </div>
-              <div className="pt-6">
-                <div className="flow-root bg-white dark:bg-gray-800 rounded-lg px-6 pb-8 shadow-md hover:shadow-xl transition-shadow duration-300">
-                  <div className="-mt-6">
-                    <span className="inline-flex items-center justify-center p-3 bg-blue-600 rounded-md shadow-lg transform transition hover:scale-110">
-                      <FileText className="h-8 w-8 text-white" />
+            </motion.div>
 
-                    </span>
-                    <h3 className="mt-8 text-lg font-medium text-gray-900 dark:text-white tracking-tight">Blog Description</h3>
-                    <textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      className="w-full h-32 p-3 mt-5 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 dark:bg-gray-700 dark:text-white resize-y"
-                      placeholder="Enter a brief description of your blog..."
-                    />
+            <motion.div variants={fadeIn} className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl blur opacity-20"></div>
+              <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-md p-6 rounded-xl shadow-xl border border-gray-200/50 dark:border-gray-700/50">
+                <div className="flex items-center mb-4">
+                  <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg shadow-md mr-3">
+                    <FileText className="h-6 w-6 text-white" />
                   </div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Blog Description</h3>
                 </div>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full h-40 p-3 bg-white/80 dark:bg-gray-700/80 border border-gray-300/60 dark:border-gray-600/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 dark:text-white shadow-sm resize-none"
+                  placeholder="Provide details about your blog post. What's the purpose? Who's the audience? What key points should be included?"
+                />
               </div>
-              <button
+            </motion.div>
+
+            <motion.div variants={fadeIn}>
+              <motion.button
                 onClick={handleGenerateBlog}
                 disabled={loading || !topic.trim() || !description.trim()}
-                className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 dark:from-blue-600 dark:to-blue-600 text-white rounded-md hover:from-blue-700 hover:to-blue-600 dark:hover:from-blue-700 dark:hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-medium shadow-lg hover:shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                whileHover={{ scale: 1.02, boxShadow: "0 10px 15px -3px rgba(59, 130, 246, 0.3)" }}
+                whileTap={{ scale: 0.98 }}
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
                     <Loader2 className="animate-spin" size={20} />
-                    Analyzing...
+                    <span>Generating content...</span>
                   </span>
                 ) : (
-                  'Generate Blog Post'
+                  <span className="flex items-center justify-center gap-2">
+                    <Sparkles className="h-5 w-5" />
+                    <span>Generate Blog Post</span>
+                  </span>
                 )}
-              </button>
+              </motion.button>
             </motion.div>
-            {generatedContent && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="mt-8"
-              >
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 relative">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                      Generated Blog Post
-                    </h2>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={toggleDarkMode}
-                        className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-                        title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
-                      >
-                        {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-                      </button>
-                      <button
-                        onClick={() => setIsEditing(!isEditing)}
-                        className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-                        title={isEditing ? "View preview" : "Edit content"}
-                      >
-                        {isEditing ? <Eye className="h-5 w-5" /> : <Edit2 className="h-5 w-5" />}
-                      </button>
-                      <button
-                        onClick={handleCopyToClipboard}
-                        className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-                        title="Copy to clipboard"
-                      >
-                        <Copy className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                  <div data-color-mode={isDarkMode ? "dark" : "light"}>
-                    {isEditing ? (
-                      <div className="min-h-[500px]">
-                        <MDEditor
-                          value={editedContent}
-                          onChange={(value) => setEditedContent(value || '')}
-                          preview="edit"
-                          height={500}
-                          className="w-full"
-                          hideToolbar={false}
-                          enableScroll={true}
-                        />
-                      </div>
-                    ) : (
-                      <div className="prose prose-sm md:prose-base lg:prose-lg dark:prose-invert max-w-none">
-                        {showAnimatedText ? (
-                          <AnimatedText 
-                            text={editedContent || generatedContent} 
-                            speed={5}
-                            className="block whitespace-pre-wrap text-gray-800 dark:text-gray-200"
-                          />
-                        ) : (
-                          <MDEditor.Markdown
-                            source={editedContent || generatedContent}
-                            style={{
-                              backgroundColor: 'transparent',
-                              color: isDarkMode ? '#fff' : '#000',
-                              fontFamily: 'inherit'
-                            }}
-                          />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  {isEditing && (
-                    <div className="mt-4 flex justify-end">
-                      <button
-                        onClick={() => {
-                          setIsEditing(false);
-                        }}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        Save Changes
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Copy Confirmation Toast */}
-                {isCopied && (
-                  <div className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg animate-fade-in-up">
-                    Copied to clipboard!
-                  </div>
-                )}
-              </motion.div>
-            )}
 
             {/* Error Message */}
-            {error && (
-              <div className="mt-6 text-center text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/50 p-4 rounded-lg">
-                {error}
-              </div>
-            )}
+            <AnimatePresence>
+              {error && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="p-4 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl border border-red-200 dark:border-red-800/50"
+                >
+                  <p className="flex items-center gap-2">
+                    <span className="flex-shrink-0 text-red-500">⚠️</span>
+                    <span>{error}</span>
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
 
-            {/* Loading State */}
-            {loading && (
-              <div className="mt-6 flex justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-              </div>
+          {/* Result Section */}
+          <motion.div
+            className="md:col-span-3"
+            initial="hidden"
+            animate="visible"
+            variants={staggerContainer}
+          >
+            {!generatedContent && !loading ? (
+              <motion.div 
+                variants={fadeIn}
+                className="h-full bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-xl p-8 shadow-xl border border-gray-200/50 dark:border-gray-700/50 flex flex-col items-center justify-center"
+              >
+                <div className="text-center space-y-4">
+                  <div className="p-4 bg-blue-100/70 dark:bg-blue-900/30 rounded-full inline-block mb-4">
+                    <Zap className="h-12 w-12 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Ready to create amazing content</h3>
+                  <p className="text-gray-600 dark:text-gray-300 max-w-md mx-auto">
+                    Fill in the topic and description fields, then click "Generate Blog Post" to create compelling content for your crowdfunding campaign.
+                  </p>
+                </div>
+              </motion.div>
+            ) : (
+              <>
+                {loading ? (
+                  <motion.div 
+                    variants={fadeIn}
+                    className="h-full bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-xl p-8 shadow-xl border border-gray-200/50 dark:border-gray-700/50 flex flex-col items-center justify-center min-h-[400px]"
+                  >
+                    <div className="text-center space-y-6">
+                      <div className="relative">
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur opacity-40"></div>
+                        <div className="relative p-4 bg-white/90 dark:bg-gray-800/90 rounded-full inline-block">
+                          <Loader2 className="h-10 w-10 text-blue-600 dark:text-blue-400 animate-spin" />
+                        </div>
+                      </div>
+                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Generating your blog post</h3>
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <div className="w-64 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <motion.div 
+                            className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 dark:from-blue-600 dark:via-indigo-600 dark:to-purple-600"
+                            initial={{ width: 0 }}
+                            animate={{ width: "100%" }}
+                            transition={{ duration: 8, ease: "easeInOut" }}
+                          />
+                        </div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">This may take a moment...</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    variants={fadeIn}
+                    className="relative"
+                  >
+                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl blur opacity-20"></div>
+                    <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+                      <div className="flex justify-between items-center p-6 border-b border-gray-200/50 dark:border-gray-700/50">
+                        <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+                          Generated Blog Post
+                        </h2>
+                        <div className="flex items-center gap-2">
+                          <motion.button
+                            onClick={() => setIsEditing(!isEditing)}
+                            className="p-2.5 bg-white/80 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 rounded-lg shadow-sm border border-gray-200/50 dark:border-gray-600/50 hover:bg-gray-50 dark:hover:bg-gray-600/50 transition-colors"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            title={isEditing ? "View preview" : "Edit content"}
+                          >
+                            {isEditing ? <Eye className="h-5 w-5" /> : <Edit2 className="h-5 w-5" />}
+                          </motion.button>
+                          <motion.button
+                            onClick={handleCopyToClipboard}
+                            className="p-2.5 bg-white/80 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 rounded-lg shadow-sm border border-gray-200/50 dark:border-gray-600/50 hover:bg-gray-50 dark:hover:bg-gray-600/50 transition-colors"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            title="Copy to clipboard"
+                          >
+                            {isCopied ? <CheckCircle className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5" />}
+                          </motion.button>
+                        </div>
+                      </div>
+                      <div className="p-6" data-color-mode={theme}>
+                        {isEditing ? (
+                          <div className="min-h-[500px]">
+                            <MDEditor
+                              value={editedContent}
+                              onChange={(value) => setEditedContent(value || '')}
+                              preview="edit"
+                              height={500}
+                              className="w-full rounded-xl overflow-hidden border-none"
+                              hideToolbar={false}
+                              enableScroll={true}
+                            />
+                          </div>
+                        ) : (
+                          <div className="prose prose-sm md:prose-base lg:prose-lg dark:prose-invert max-w-none min-h-[500px] max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">
+                            {showAnimatedText ? (
+                              <AnimatedText 
+                                text={editedContent || generatedContent} 
+                                speed={5}
+                                className="block whitespace-pre-wrap text-gray-800 dark:text-gray-200"
+                              />
+                            ) : (
+                              <MDEditor.Markdown
+                                source={editedContent || generatedContent}
+                                style={{
+                                  backgroundColor: 'transparent',
+                                  color: theme === 'dark' ? '#fff' : '#000',
+                                  fontFamily: 'inherit'
+                                }}
+                              />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {isEditing && (
+                        <div className="p-5 border-t border-gray-200/50 dark:border-gray-700/50 flex justify-end">
+                          <motion.button
+                            onClick={() => setIsEditing(false)}
+                            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-md hover:shadow-blue-500/20 flex items-center gap-2"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <span>Save Changes</span>
+                            <ArrowRight className="w-4 h-4" />
+                          </motion.button>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </>
             )}
-          </div>
+          </motion.div>
         </div>
+
+        {/* Copy Confirmation Toast */}
+        <AnimatePresence>
+          {isCopied && (
+            <motion.div 
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.3 }}
+              className="fixed bottom-6 right-6 bg-green-500 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2"
+            >
+              <CheckCircle className="h-5 w-5" />
+              <span>Copied to clipboard!</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+
+      {/* Add custom scrollbar styles */}
+      <style>
+        {`
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.5);
+            border-radius: 10px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(79, 70, 229, 0.7);
+          }
+        `}
+      </style>
     </div>
   );
 };

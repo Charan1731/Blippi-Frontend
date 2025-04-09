@@ -8,10 +8,11 @@ import '@rainbow-me/rainbowkit/styles.css';
 const { wallets } = getDefaultWallets();
 const sepoliaChain = sepolia;
 
+// Updated to use Infura or Alchemy which have proper CORS setup
 const config = createConfig({
   chains: [sepoliaChain],
   transports: {
-    [sepoliaChain.id]: http(),
+    [sepoliaChain.id]: http('https://eth-sepolia.g.alchemy.com/v2/demo'),
   },
 });
 

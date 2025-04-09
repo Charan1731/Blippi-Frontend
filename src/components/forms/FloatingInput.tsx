@@ -3,6 +3,7 @@ import React from 'react';
 interface FloatingInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
   error?: string;
+  className?: string;
 }
 
 export default function FloatingInput({ 
@@ -10,6 +11,7 @@ export default function FloatingInput({
   error, 
   id,
   value,
+  className,
   ...props 
 }: FloatingInputProps) {
   const [focused, setFocused] = React.useState(false);
@@ -35,6 +37,7 @@ export default function FloatingInput({
           transition-all duration-200 outline-none
           ${error ? 'border-red-500' : focused ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-gray-300 dark:border-gray-600'}
           ${hasValue ? 'ring-1 ring-blue-500/10' : ''}
+          ${className || ''}
         `}
       />
       <label
