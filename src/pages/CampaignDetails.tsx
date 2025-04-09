@@ -127,7 +127,7 @@ export default function CampaignDetails() {
       
       console.log('Deleting campaign:', id);
       const tx = await contract.deleteCampaign(id, {
-        gasLimit: 3000000 // Set a higher gas limit explicitly
+        gasLimit: 3000000
       });
       
       console.log('Delete transaction submitted:', tx.hash);
@@ -143,14 +143,7 @@ export default function CampaignDetails() {
     }
   };
 
-  const handleLike = () => {
-    if (hasLiked) {
-      setLikeCount(prev => prev - 1);
-    } else {
-      setLikeCount(prev => prev + 1);
-    }
-    setHasLiked(!hasLiked);
-  };
+
 
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },

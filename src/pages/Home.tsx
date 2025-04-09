@@ -323,7 +323,7 @@ export default function Home() {
           </div>
         </FadeIn>
 
-        {/* Campaign cards */}
+        {/* Campaign cards with enhanced animation */}
         <FadeIn delay={300}>
           {filteredAndSortedCampaigns.length === 0 ? (
             <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl p-12 text-center border border-gray-200/50 dark:border-gray-700/50">
@@ -337,7 +337,7 @@ export default function Home() {
             </div>
           ) : (
             <motion.div 
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
               variants={{
                 hidden: { opacity: 0 },
                 show: {

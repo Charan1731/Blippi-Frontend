@@ -15,7 +15,7 @@ export default function NavLinks({ isAuthenticated, isMobile, onClose }: NavLink
     { to: '/create', icon: PenLine, label: 'Create' },
     ...(isAuthenticated ? [
       { to: '/profile', icon: User, label: 'Profile' },
-      { to: '/ai', icon: Sparkles, label: 'AI-Blog Generator' }
+      { to: '/ai', icon: Sparkles, label: 'AI-Blog' }
     ] : []),
   ];
 
