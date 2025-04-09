@@ -1,83 +1,66 @@
 import React from 'react';
-import { Twitter, Github, Linkedin, Mail } from 'lucide-react';
-import FadeIn from './FadeIn';
+import { Twitter, Github, Linkedin, Mail, Rocket } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <FadeIn delay={100}>
-            <div>
-              <h3 className="font-sans text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Subscribe to our newsletter
-              </h3>
-              <form className="space-y-4">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="w-full bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors">
-                  Subscribe
-                </button>
-              </form>
+    <footer className="relative w-full overflow-hidden py-8">
+      {/* Minimal gradient accent */}
+      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+          {/* Logo & App Links */}
+          <div className="flex flex-col items-center md:items-start">
+            <div className="flex items-center mb-4">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Blippi</h2>
             </div>
-          </FadeIn>
-          <FadeIn delay={200}>
-            <div>
-              <h3 className="font-sans text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Quick Links
-              </h3>
-              <ul className="space-y-2 text-gray-600 dark:text-gray-300">
-                <li><a href="https://zippy-kiwi-7e8.notion.site/About-Us-16c184f7e1cf80bfb53cd5eed65c0638" target='_blank' className="hover:text-blue-600 dark:hover:text-blue-400">About Us</a></li>
-                <li><a href="https://zippy-kiwi-7e8.notion.site/Contact-Us-16c184f7e1cf802f9656e01e2ed8ad8c" target='_blank' className="hover:text-blue-600 dark:hover:text-blue-400">Contact</a></li>
-                <li><a href="https://zippy-kiwi-7e8.notion.site/Privacy-Policy-16c184f7e1cf80a18d7ae96970acab54?pvs=4" target='_blank' className="hover:text-blue-600 dark:hover:text-blue-400">Privacy Policy</a></li>
-                <li><a href="https://zippy-kiwi-7e8.notion.site/Terms-of-Service-16c184f7e1cf8014b2c6d9f89372e780?pvs=4" target='_blank' className="hover:text-blue-600 dark:hover:text-blue-400">Terms of Service</a></li>
-              </ul>
+            <div className="flex flex-wrap justify-center md:justify-start gap-x-6 gap-y-2 text-sm">
+              <Link to="/" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Home</Link>
+              <Link to="/create" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Write</Link>
+              <Link to="/ai" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">AI Generator</Link>
+              <Link to="/profile" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Profile</Link>
             </div>
-          </FadeIn>
-          <FadeIn delay={300}>
-            <div>
-              <h3 className="font-sans text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Categories
-              </h3>
-              <ul className="space-y-2 text-gray-600 dark:text-gray-300">
-                <li><a href="https://zippy-kiwi-7e8.notion.site/Technology-170184f7e1cf8019a033caa1d117cf40" target='_blank' className="hover:text-blue-600 dark:hover:text-blue-400">Technology</a></li>
-                <li><a href="https://zippy-kiwi-7e8.notion.site/Buisiness-170184f7e1cf8003ae73ca96d780e7c8?pvs=73" target='_blank' className="hover:text-blue-600 dark:hover:text-blue-400">Business</a></li>
-                <li><a href="https://zippy-kiwi-7e8.notion.site/Creativity-170184f7e1cf80c7b973cd6664ee93c2?pvs=73" target='_blank' className="hover:text-blue-600 dark:hover:text-blue-400">Creativity</a></li>
-                <li><a href="https://zippy-kiwi-7e8.notion.site/Innovation-170184f7e1cf8044b88ecf783279fa9f?pvs=73" target='_blank' className="hover:text-blue-600 dark:hover:text-blue-400">Innovation</a></li>
-              </ul>
-            </div>
-          </FadeIn>
-          <FadeIn delay={400}>
-            <div>
-              <h3 className="font-sans text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Follow Us
-              </h3>
-              <div className="flex space-x-4">
-                <a href="https://x.com/CharanR18433412" target='_blank' className="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
-                  <Twitter className="w-5 h-5" />
-                </a>
-                <a href="https://github.com/Charan1731" target='_blank' className="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
-                  <Github className="w-5 h-5" />
-                </a>
-                <a href="https://www.linkedin.com/in/charandeep-reddy-2640a4301/" target='_blank' className="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
-                  <Linkedin className="w-5 h-5" />
-                </a>
-                <a href="mailto:charan23114@gmail.com" target='_blank' className="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
-                  <Mail className="w-5 h-5" />
-                </a>
-              </div>
-            </div>
-          </FadeIn>
+          </div>
+          
+          {/* Social Media */}
+          <div className="flex space-x-4">
+            {[
+              { icon: <Twitter className="w-4 h-4" />, href: "https://x.com/CharanR18433412" },
+              { icon: <Github className="w-4 h-4" />, href: "https://github.com/Charan1731" },
+              { icon: <Linkedin className="w-4 h-4" />, href: "https://www.linkedin.com/in/charandeep-reddy-2640a4301/" },
+              { icon: <Mail className="w-4 h-4" />, href: "mailto:charan23114@gmail.com" }
+            ].map((social, index) => (
+              <motion.a 
+                key={index}
+                href={social.href} 
+                target='_blank'
+                whileHover={{ scale: 1.15, y: -2 }}
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
+              >
+                {social.icon}
+              </motion.a>
+            ))}
+          </div>
         </div>
         
-        <FadeIn delay={500}>
-          <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700 text-center text-sm text-gray-500 dark:text-gray-400">
-            © {new Date().getFullYear()} Your Blog. All rights reserved.
-          </div>
-        </FadeIn>
+        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700/50 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row items-center justify-center gap-2">
+          <span>© {new Date().getFullYear()} Blippi</span>
+          <span className="hidden sm:inline">•</span>
+          <span>Web3 Publishing Platform</span>
+          <span className="hidden sm:inline">•</span>
+          <a href="https://zippy-kiwi-7e8.notion.site/Privacy-Policy-16c184f7e1cf80a18d7ae96970acab54?pvs=4" target="_blank" className="hover:text-blue-500">Privacy</a>
+          <span className="hidden sm:inline">•</span>
+          <a href="https://zippy-kiwi-7e8.notion.site/Terms-of-Service-16c184f7e1cf8014b2c6d9f89372e780?pvs=4" target="_blank" className="hover:text-blue-500">Terms</a>
+          <motion.div 
+            className="ml-1 inline-flex"
+            whileHover={{ rotate: 45 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Rocket className="w-3 h-3 text-blue-500/70" />
+          </motion.div>
+        </div>
       </div>
     </footer>
   );
