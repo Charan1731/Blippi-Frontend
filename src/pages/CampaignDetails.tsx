@@ -261,17 +261,6 @@ export default function CampaignDetails() {
       </Modal>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-16 relative z-10">
-        {/* <motion.button 
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 mb-6 transition-colors duration-200"
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3 }}
-          whileHover={{ x: -5 }}
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to all campaigns
-        </motion.button> */}
 
         <motion.div
           initial="hidden"
@@ -287,57 +276,13 @@ export default function CampaignDetails() {
               onDelete={handleDeleteConfirm} 
             />
           </motion.div>
-
-          {/* Campaign engagement metrics */}
-          <motion.div 
-            variants={fadeIn}
-            className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-xl p-4 shadow-lg flex flex-wrap justify-between items-center gap-4"
-          >
-            <div className="flex items-center gap-6">
-              <button 
-                onClick={handleLike}
-                className={`flex items-center gap-1.5 transition-all duration-200 ${
-                  hasLiked 
-                    ? 'text-pink-600 dark:text-pink-400 scale-110' 
-                    : 'text-gray-500 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-400'
-                }`}
-              >
-                <Heart className={`w-5 h-5 ${hasLiked ? 'fill-pink-600 dark:fill-pink-400' : ''} transition-all duration-300`} />
-                <span className="font-medium">{likeCount}</span>
-              </button>
-
-              <button className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">
-                <MessageCircle className="w-5 h-5" />
-                <span className="font-medium">{campaign.donators.length}</span>
-              </button>
-
-              <button className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors duration-200">
-                <Share2 className="w-5 h-5" />
-                <span className="font-medium">Share</span>
-              </button>
-            </div>
-            
-            <div className="flex items-center">
-              <div className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${
-                isActive 
-                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' 
-                  : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-              }`}>
-                <Clock className="w-3 h-3" />
-                {isActive 
-                  ? `${timeLeft} days left` 
-                  : 'Campaign ended'
-                }
-              </div>
-            </div>
-          </motion.div>
+          
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <motion.div 
               className="lg:col-span-2 space-y-8"
               variants={fadeIn}
             >
-              {/* Campaign description */}
               <motion.div 
                 className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-2xl p-8 shadow-xl"
                 initial={{ opacity: 0, y: 20 }}

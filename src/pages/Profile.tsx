@@ -4,7 +4,6 @@ import { getContract } from '../contracts';
 import ProfileHeader from '../components/profile/ProfileHeader';
 import StatsCard from '../components/profile/StatsCard';
 import CampaignList from '../components/profile/CampaignList';
-import FadeIn from '../components/FadeIn';
 import { motion } from 'framer-motion';
 import { Pen, BookOpenText, MessageSquareText, Clock, Bookmark } from 'lucide-react';
 import type { Campaign } from '../types/campaign';
