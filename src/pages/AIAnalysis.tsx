@@ -45,7 +45,7 @@ const BlogGenerator = () => {
   };
 
   const handleGenerateBlog = async () => {
-    const apiKey = import.meta.env.VITE_GEMINI?.replace(/["']/g, '');
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.replace(/["']/g, '');
     if (!apiKey) {
       setError('Gemini API key is not configured');
       return;
