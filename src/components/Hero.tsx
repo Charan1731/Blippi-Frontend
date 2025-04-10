@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 
 export default function Hero() {
   const navigate = useNavigate();
-  const heroText = "Exploring Web3: Your Gateway to Decentralized Innovation, Blockchain Breakthroughs, and the Next Era of the Internet.";
+  const heroText = "Where Ideas Meet the Blockchain. Fuel Innovation, Empower Communities, and Shape the Future One Block at a Time.";
   const [mounted, setMounted] = useState(false);
   
   useEffect(() => {
