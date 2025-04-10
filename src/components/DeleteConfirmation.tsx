@@ -64,7 +64,7 @@ const DeleteConfirmation: React.FC<DeleteConfirmationProps> = ({
               <span>Deleting...</span>
             </>
           ) : (
-            'Delete Campaign'
+            'Delete Blog'
           )}
         </button>
       </div>

@@ -115,7 +115,7 @@ export default function CampaignDetails() {
     
     // Check if user is the campaign owner
     if (account?.toLowerCase() !== campaign.owner.toLowerCase()) {
-      setErrorMessage('You are not authorized to delete this campaign');
+      setErrorMessage('You are not authorized to delete this Blog');
       return;
     }
 
@@ -137,7 +137,7 @@ export default function CampaignDetails() {
       navigate('/');
     } catch (error) {
       console.error('Error deleting campaign:', error);
-      setErrorMessage(error instanceof Error ? error.message : 'Failed to delete campaign');
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to delete blog');
       setIsDeleting(false);
       setShowDeleteConfirm(false);
     }
@@ -170,7 +170,7 @@ export default function CampaignDetails() {
         <div className="text-center">
           <div className="inline-block p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-xl">
             <div className="w-16 h-16 border-4 border-blue-600/30 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-300 font-medium">Loading campaign details...</p>
+            <p className="mt-4 text-gray-600 dark:text-gray-300 font-medium">Loading Blog details...</p>
           </div>
         </div>
       </div>
@@ -227,7 +227,7 @@ export default function CampaignDetails() {
       <Modal
         isOpen={showDeleteConfirm}
         onClose={handleCancelDelete}
-        title="Delete Campaign"
+        title="Delete Blog"
         type="error"
       >
         <DeleteConfirmation

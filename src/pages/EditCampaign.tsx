@@ -438,7 +438,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
           transition={{ duration: 0.5 }}
         >
           <h1 className="text-5xl mt-10 font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            Edit Your Campaign
+            Edit Your Blog
           </h1>
           <p className="mt-4 text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Update your fundraising details and keep your supporters informed.
@@ -462,7 +462,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
               <div className="w-full">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Campaign update progress
+                    Blog update progress
                   </p>
                   <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
                     {isFormComplete ? 'Ready to update!' : 'Complete all fields'}
@@ -497,7 +497,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
                   }`}
                 >
                   <Rocket className="w-4 h-4" />
-                  <span>Campaign Details</span>
+                  <span>Blog Details</span>
                   {validationAttempted && (errors.title || errors.description || errors.target || errors.deadline) && (
                     <span className="flex h-2 w-2 relative">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -536,7 +536,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
                       <FloatingInput
                         id="title"
                         type="text"
-                        label="Campaign Title"
+                        label="Blog Title"
                         value={formData.title}
                         onChange={handleInputChange}
                         error={errors.title}
@@ -553,7 +553,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
 
                     <motion.div variants={fadeIn} className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Campaign Description
+                        Blog Description
                       </label>
                       <div data-color-mode="light" className="w-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                         <MDEditor
@@ -716,7 +716,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
               transition={{ duration: 0.5, delay: 0.4 }}
             >
               <div className="sticky top-20">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Campaign Preview</h3>
+                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Blog Preview</h3>
                 <CampaignPreview data={formData} />
               </div>
             </motion.div>
@@ -753,13 +753,13 @@ If the content is inappropriate, explain what specific part is inappropriate and
         <Modal
           isOpen={showSuccessModal}
           onClose={handleCloseSuccessModal}
-          title="Campaign Updated!"
+          title="Blog Updated!"
           type="success"
         >
           <SuccessConfirmation
-            title="Campaign Successfully Updated!"
-            message="Your campaign has been updated with the new information. Thank you for keeping your supporters informed."
-            actionText="View Your Campaign"
+            title="Blog Successfully Updated!"
+            message="Your Blog has been updated with the new information. Thank you for keeping your supporters informed."
+            actionText="View Your BLog"
             onAction={handleViewCampaign}
           />
         </Modal>

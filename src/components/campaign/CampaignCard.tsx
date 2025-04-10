@@ -154,7 +154,7 @@ export default function CampaignCard({ campaign, index }: CampaignCardProps) {
                 : 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700'
             }`}
           >
-            <span>{isActive ? 'View Details' : 'View Ended Campaign'}</span>
+            <span>{isActive ? 'View Details' : 'View Ended Blog'}</span>
             <motion.div 
               className="ml-2"
               initial={{ x: 0 }}
