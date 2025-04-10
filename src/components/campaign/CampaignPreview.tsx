@@ -28,14 +28,14 @@ export default function CampaignPreview({ data }: CampaignPreviewProps) {
       <div className="space-y-4">
         <div>
           <h4 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {data.title || 'Campaign Title'}
+            {data.title || 'Blog Title'}
           </h4>
         </div>
         
         <div data-color-mode="light" className="prose prose-sm max-w-none">
           <div className="max-h-[150px] overflow-hidden relative">
             <MDEditor.Markdown 
-              source={data.description || 'Campaign description will appear here...'} 
+              source={data.description || 'Blog description will appear here...'} 
               style={{ whiteSpace: 'pre-wrap' }}
               className='bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm dark:text-white p-4 rounded-lg'
             />

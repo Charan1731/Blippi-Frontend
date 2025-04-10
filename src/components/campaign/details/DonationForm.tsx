@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { parseEther } from 'ethers';
 import { Wallet, ArrowRight, Gift, CreditCard, Zap } from 'lucide-react';
 import { useWeb3 } from '../../../context/Web3Context';
@@ -14,8 +14,38 @@ export default function DonationForm({ campaignId, onDonate }: DonationFormProps
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState<string | null>(null);
+  const [ethToInrRate, setEthToInrRate] = useState<number | null>(null);
+  const [convertedAmount, setConvertedAmount] = useState<number | null>(null);
 
   const predefinedAmounts = ['0.01', '0.05', '0.1', '0.5'];
+
+  useEffect(() => {
+    const fetchEthPrice = async () => {
+      try {
+        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=inr');
+        const data = await response.json();
+        setEthToInrRate(data.ethereum.inr);
+      } catch (error) {
+        console.error('Error fetching ETH price:', error);
+      }
+    };
+
+    fetchEthPrice();
+    // Refresh price every 60 seconds
+    const interval = setInterval(fetchEthPrice, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (amount && ethToInrRate) {
+      const ethAmount = parseFloat(amount);
+      if (!isNaN(ethAmount)) {
+        setConvertedAmount(ethAmount * ethToInrRate);
+      }
+    } else {
+      setConvertedAmount(null);
+    }
+  }, [amount, ethToInrRate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +114,32 @@ export default function DonationForm({ campaignId, onDonate }: DonationFormProps
               ETH
             </span>
           </div>
+
+          {convertedAmount !== null && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="p-3 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 backdrop-blur-sm"
+            >
+              <div className="flex items-center justify-center gap-2">
+                <div className="p-1.5 bg-blue-100 dark:bg-blue-800/50 rounded-full">
+                  <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="currentColor"/>
+                    <path d="M12 6C8.69 6 6 8.69 6 12C6 15.31 8.69 18 12 18C15.31 18 18 15.31 18 12C18 8.69 15.31 6 12 6ZM12 16C9.79 16 8 14.21 8 12C8 9.79 9.79 8 12 8C14.21 8 16 9.79 16 12C16 14.21 14.21 16 12 16Z" fill="currentColor"/>
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    ≈ ₹{convertedAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Current rate: 1 ETH = ₹{ethToInrRate?.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
           
           <div className="p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-800/30">
             <div className="flex items-start gap-3">

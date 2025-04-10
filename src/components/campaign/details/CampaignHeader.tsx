@@ -291,14 +291,34 @@ export default function CampaignHeader({
             
             <motion.div 
               variants={itemVariants}
-              className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 p-4 rounded-xl flex items-center gap-4 border border-emerald-100 dark:border-emerald-800/30"
+              className={`${
+                isExpired 
+                  ? 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/30' 
+                  : 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20'
+              } p-4 rounded-xl flex items-center gap-4 border ${
+                isExpired 
+                  ? 'border-red-100 dark:border-red-800/30' 
+                  : 'border-emerald-100 dark:border-emerald-800/30'
+              }`}
             >
-              <div className="p-3 bg-emerald-500/20 dark:bg-emerald-500/30 rounded-full">
-                <CalendarDays className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              <div className={`p-3 ${
+                isExpired 
+                  ? 'bg-red-500/20 dark:bg-red-500/30' 
+                  : 'bg-emerald-500/20 dark:bg-emerald-500/30'
+              } rounded-full`}>
+                <CalendarDays className={`w-6 h-6 ${
+                  isExpired 
+                    ? 'text-red-600 dark:text-red-400' 
+                    : 'text-emerald-600 dark:text-emerald-400'
+                }`} />
               </div>
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Status</p>
-                <p className="font-bold text-xl text-gray-900 dark:text-white">
+                <p className={`text-xs text-gray-500 dark:text-gray-400`}>Status</p>
+                <p className={`font-bold text-xl ${
+                  isExpired 
+                    ? 'text-red-700 dark:text-red-300' 
+                    : 'text-gray-900 dark:text-white'
+                }`}>
                   {isExpired ? 'Ended' : 'Active'}
                 </p>
               </div>

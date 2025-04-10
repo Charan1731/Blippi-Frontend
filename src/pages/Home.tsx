@@ -233,7 +233,7 @@ export default function Home() {
             <div className="relative overflow-hidden rounded-2xl mb-12">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 dark:from-blue-600/10 dark:via-purple-600/10 dark:to-pink-600/10" />
               
-              <div className="absolute top-4 left-4 z-50 bg-gradient-to-r from-yellow-500 to-amber-500 text-white px-4 py-1 rounded-full text-sm font-medium shadow-lg flex items-center">
+              <div className="absolute top-4 left-4 z-20 bg-gradient-to-r from-yellow-500 to-amber-500 text-white px-4 py-1 rounded-full text-sm font-medium shadow-lg flex items-center">
                 <Award className="w-4 h-4 mr-2" /> Featured Blog
               </div>
               

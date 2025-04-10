@@ -25,7 +25,7 @@ const DeleteConfirmation: React.FC<DeleteConfirmationProps> = ({
       <div className="animate-fade-in-up space-y-2">
         <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Confirm Delete</h3>
         <p className="text-gray-600 dark:text-gray-300">
-          Are you sure you want to delete this campaign? This action cannot be undone.
+          Are you sure you want to delete this Blog? This action cannot be undone.
         </p>
       </div>
 

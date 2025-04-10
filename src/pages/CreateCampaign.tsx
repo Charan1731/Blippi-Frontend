@@ -664,7 +664,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
           type="success"
         >
           <SuccessConfirmation
-            title="Campaign Successfully Created!"
+            title="Blog Successfully Created!"
             message="Your fundraising campaign has been created and is now live on the platform. Thank you for making a difference!"
             actionText={newCampaignId ? "View Your Campaign" : "Go to Home"}
             onAction={handleViewCampaign}
