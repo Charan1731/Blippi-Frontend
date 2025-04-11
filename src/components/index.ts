@@ -12,6 +12,7 @@ export { default as AnimatedText } from './AnimatedText';
 
 // Campaign Components
 export { default as CampaignCard } from './CampaignCard';
+export { default as DonorLeaderboard } from './campaign/details/DonorLeaderboard';
 
 // Form Components
 export { default as SearchBar } from './SearchBar'; 

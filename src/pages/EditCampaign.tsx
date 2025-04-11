@@ -759,7 +759,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
           <SuccessConfirmation
             title="Blog Successfully Updated!"
             message="Your Blog has been updated with the new information. Thank you for keeping your supporters informed."
-            actionText="View Your BLog"
+            actionText="View Your Blog"
             onAction={handleViewCampaign}
           />
         </Modal>

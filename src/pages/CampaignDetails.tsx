@@ -6,6 +6,7 @@ import { parseEther, formatEther } from 'ethers';
 import CampaignHeader from '../components/campaign/details/CampaignHeader';
 import DonationForm from '../components/campaign/details/DonationForm';
 import DonationList from '../components/campaign/details/DonationList';
+import DonorLeaderboard from '../components/campaign/details/DonorLeaderboard';
 import type { Campaign } from '../types/campaign';
 import MDEditor from '@uiw/react-md-editor';
 import Modal from '../components/Modal';
@@ -293,6 +294,41 @@ export default function CampaignDetails() {
                     className='bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm dark:text-white p-6 rounded-lg'
                   />
                 </div>
+              </motion.div>
+              
+              {/* Donor Leaderboard */}
+              <motion.div 
+                variants={fadeIn}
+                initial="hidden"
+                animate="visible"
+                className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-2xl p-8 shadow-xl relative overflow-hidden"
+              >
+                {/* Decorative elements */}
+                <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/10 dark:bg-amber-500/5 rounded-full filter blur-3xl"></div>
+                <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-500/10 dark:bg-blue-500/5 rounded-full filter blur-3xl"></div>
+                
+                {/* Header */}
+                <div className="mb-6 relative z-10">
+                  <motion.span 
+                    className="inline-block text-xs font-semibold py-1 px-3 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 mb-2"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    Top Donations
+                  </motion.span>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    Campaign Champions
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Top supporters are recognized for their generous contributions
+                  </p>
+                </div>
+                
+                <DonorLeaderboard 
+                  donators={campaign.donators} 
+                  donations={campaign.donations} 
+                />
               </motion.div>
               
               {/* Campaign stats */}

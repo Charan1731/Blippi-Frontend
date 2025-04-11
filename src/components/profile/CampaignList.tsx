@@ -150,11 +150,11 @@ export default function CampaignList({ campaigns }: CampaignListProps) {
               <div className="grid grid-cols-2 gap-2 mb-4">
                 <div className="bg-gray-100 dark:bg-gray-700/50 rounded-lg p-2 flex items-center">
                   <Calendar className="w-4 h-4 text-blue-500 mr-2" />
-                  <span className="text-xs">{formatDate(campaign.deadline)}</span>
+                  <span className="text-xs dark:text-white">{formatDate(campaign.deadline)}</span>
                 </div>
                 <div className="bg-gray-100 dark:bg-gray-700/50 rounded-lg p-2 flex items-center">
                   <Users className="w-4 h-4 text-purple-500 mr-2" />
-                  <span className="text-xs">{campaign.donators.length} Supporters</span>
+                  <span className="text-xs dark:text-white">{campaign.donators.length} Supporters</span>
                 </div>
               </div>
               

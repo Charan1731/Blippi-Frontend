@@ -138,11 +138,11 @@ export default function CampaignCard({ campaign, index }: CampaignCardProps) {
                   ? 'text-blue-500 dark:text-blue-400' 
                   : 'text-red-500 dark:text-red-400'
               }`} />
-              <span className="text-xs">{formatDate(campaign.deadline)}</span>
+              <span className="text-xs dark:text-white">{formatDate(campaign.deadline)}</span>
             </div>
             <div className="bg-gray-100/70 dark:bg-gray-700/50 rounded-lg p-2 flex items-center">
               <Users className="w-4 h-4 text-purple-500 dark:text-purple-400 mr-2" />
-              <span className="text-xs">{campaign.donators.length} Supporters</span>
+              <span className="text-xs dark:text-white">{campaign.donators.length} Supporters</span>
             </div>
           </div>
           

@@ -452,7 +452,7 @@ Return only the **fully written blog post** in Markdown format without explainin
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
               transition={{ duration: 0.3 }}
-              className="fixed bottom-6 right-6 bg-green-500 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2"
+              className="fixed z-50 bottom-6 right-6 bg-green-500 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2"
             >
               <CheckCircle className="h-5 w-5" />
               <span>Copied to clipboard!</span>

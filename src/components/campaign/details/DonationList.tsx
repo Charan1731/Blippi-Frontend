@@ -1,7 +1,7 @@
 import React from 'react';
 import { formatEther } from 'ethers';
 import { formatDistanceToNow } from 'date-fns';
-import { User, Users, ArrowDown, Coins } from 'lucide-react';
+import { User, Users, ArrowDown, Coins, Award, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface Donation {
@@ -39,11 +39,26 @@ export default function DonationList({ donations }: DonationListProps) {
           Recent Supporters
         </h3>
         
-        {donations.length > 0 && (
-          <div className="text-sm font-medium text-purple-600 dark:text-purple-400">
-            {donations.length} {donations.length === 1 ? 'donation' : 'donations'}
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {donations.length > 0 && (
+            <div className="text-sm font-medium text-purple-600 dark:text-purple-400">
+              {donations.length} {donations.length === 1 ? 'donation' : 'donations'}
+            </div>
+          )}
+          
+          {donations.length >= 3 && (
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="text-xs px-3 py-1 rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 dark:from-amber-900/30 dark:to-yellow-900/30 text-amber-800 dark:text-amber-300 font-medium flex items-center gap-1.5 cursor-pointer"
+              onClick={() => document.getElementById('donor-leaderboard')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              <Award className="w-3 h-3" />
+              <span>See Leaderboard</span>
+              <ArrowRight className="w-3 h-3" />
+            </motion.div>
+          )}
+        </div>
       </div>
       
       <motion.div 

@@ -18,7 +18,7 @@ export default function AnimatedText({
   text, 
   className = '', 
   delay = 0,
-  speed = 30,
+  speed = 10,
   cursorColor,
   fadeIn = true,
   gradient = false,
