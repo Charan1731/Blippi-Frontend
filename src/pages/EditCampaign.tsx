@@ -618,7 +618,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
                       <FloatingInput
                         id="image"
                         type="url"
-                        label="Campaign Image URL"
+                        label="Blog Image URL"
                         value={formData.image}
                         onChange={handleInputChange}
                         placeholder=""

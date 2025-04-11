@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWeb3 } from '../context/Web3Context';
@@ -307,7 +308,6 @@ If the content is inappropriate, explain what specific part is inappropriate and
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string,
-    id?: string
   ) => {
     if (typeof e === 'string') {
       setFormData(prev => ({ ...prev, description: e }));
@@ -541,7 +541,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
                       <FloatingInput
                         id="image"
                         type="url"
-                        label="Campaign Image URL"
+                        label="Blog Image URL"
                         value={formData.image}
                         onChange={handleInputChange}
                         placeholder=""
