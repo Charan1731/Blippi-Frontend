@@ -3,6 +3,7 @@ import { parseEther } from 'ethers';
 import { Wallet, ArrowRight, Gift, CreditCard, Zap } from 'lucide-react';
 import { useWeb3 } from '../../../context/Web3Context';
 import { motion } from 'framer-motion';
+import WalletButton from '../../WalletButton';
 
 interface DonationFormProps {
   campaignId: string;
@@ -220,14 +221,17 @@ export default function DonationForm({ campaignId, onDonate }: DonationFormProps
             Please connect your wallet to make a donation to this campaign
           </p>
           
-          <motion.button
+          {/* <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg text-white font-medium shadow-md hover:shadow-lg transition-all duration-200"
           >
             <CreditCard className="w-4 h-4 mr-2" />
             Connect Wallet
-          </motion.button>
+          </motion.button> */}
+          <div className='flex justify-center'>
+          <WalletButton />
+          </div>
         </motion.div>
       )}
     </div>

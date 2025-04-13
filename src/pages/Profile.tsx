@@ -7,7 +7,7 @@ import CampaignList from '../components/profile/CampaignList';
 import { motion } from 'framer-motion';
 import { Pen, BookOpenText, MessageSquareText, Clock, Bookmark } from 'lucide-react';
 import type { Campaign } from '../types/campaign';
-
+import WalletButton from '../components/WalletButton';
 export default function Profile() {
   const { provider, account } = useWeb3();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -63,9 +63,10 @@ export default function Profile() {
         <p className="text-center text-gray-600 dark:text-gray-400 max-w-md mb-6">
           Please connect your wallet to view your profile and manage your blogs.
         </p>
-        <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-medium shadow-lg hover:shadow-blue-500/20 transition-all duration-200 transform hover:-translate-y-1">
+        {/* <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-medium shadow-lg hover:shadow-blue-500/20 transition-all duration-200 transform hover:-translate-y-1">
           Connect Wallet
-        </button>
+        </button> */}
+        <WalletButton />
       </motion.div>
     );
   }
