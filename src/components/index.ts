@@ -15,4 +15,7 @@ export { default as CampaignCard } from './CampaignCard';
 export { default as DonorLeaderboard } from './campaign/details/DonorLeaderboard';
 
 // Form Components
-export { default as SearchBar } from './SearchBar'; 
+export { default as SearchBar } from './SearchBar';
+
+// AI Components
+export * from './ai'; 

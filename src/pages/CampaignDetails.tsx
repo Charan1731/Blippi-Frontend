@@ -14,6 +14,7 @@ import SuccessConfirmation from '../components/SuccessConfirmation';
 import DeleteConfirmation from '../components/DeleteConfirmation';
 import { motion } from 'framer-motion';
 import { Clock, ArrowLeft, Heart, Share2, MessageCircle, Users, Sparkles } from 'lucide-react';
+import { SummarizeButton } from '../components/ai';
 
 export default function CampaignDetails() {
   const { id } = useParams<{ id: string }>();
@@ -287,6 +288,22 @@ export default function CampaignDetails() {
                   <Sparkles className="w-5 h-5 text-yellow-500" />
                   About this campaign
                 </h3>
+                <div className="flex justify-between items-center mb-3">
+                  <motion.span 
+                    className="inline-block text-xs font-semibold py-1 px-3 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    Campaign Description
+                  </motion.span>
+                  <SummarizeButton
+                    content={campaign.description}
+                    title="Campaign Summary"
+                    variant="secondary"
+                    size="sm"
+                  />
+                </div>
                 <div data-color-mode="light" className="prose prose-blue max-w-none dark:prose-invert">
                   <MDEditor.Markdown 
                     source={campaign.description} 
