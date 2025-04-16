@@ -1,13 +1,14 @@
 import React from 'react';
-import { BarChart2, Target, Clock, Award, TrendingUp } from 'lucide-react';
+import { BarChart2, Target, Clock, Award, TrendingUp, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Campaign } from '../../types/campaign';
 
 interface StatsCardProps {
   campaigns: Campaign[];
+  donatedCampaigns: Campaign[];
 }
 
-export default function StatsCard({ campaigns }: StatsCardProps) {
+export default function StatsCard({ campaigns, donatedCampaigns }: StatsCardProps) {
   const activeCampaigns = campaigns.filter(
     campaign => Number(campaign.deadline) * 1000 > Date.now()
   ).length;
@@ -25,6 +26,9 @@ export default function StatsCard({ campaigns }: StatsCardProps) {
     },
     0
   );
+
+  // Calculate total donations made
+  const totalDonationsMade = donatedCampaigns.length;
 
   const fadeInUpVariant = {
     hidden: { y: 20, opacity: 0 },
@@ -69,12 +73,12 @@ export default function StatsCard({ campaigns }: StatsCardProps) {
       icon: <Award className="w-6 h-6 text-orange-600 dark:text-orange-400" />,
       bgColor: "bg-orange-500/10 dark:bg-orange-600/20",
       gradient: "from-orange-500 to-red-500 dark:from-orange-600 dark:to-red-600",
-      index: 4
+      index: 5
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {stats.map((stat) => (
         <motion.div
           key={stat.title}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { formatEther } from 'ethers';
-import { ArrowRight, Clock, Users, Calendar, Heart } from 'lucide-react';
+import { ArrowRight, Clock, Users, Calendar, Heart, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ProgressBar from './ProgressBar';
 import type { Campaign } from '../../types/campaign';
@@ -9,9 +9,11 @@ import type { Campaign } from '../../types/campaign';
 interface CampaignCardProps {
   campaign: Campaign;
   index: number;
+  showDonationBadge?: boolean;
+  userAddress?: string;
 }
 
-export default function CampaignCard({ campaign, index }: CampaignCardProps) {
+export default function CampaignCard({ campaign, index, showDonationBadge, userAddress }: CampaignCardProps) {
   const isActive = Number(campaign.deadline) * 1000 > Date.now();
   const progress = Number(campaign.amountCollected) / Number(campaign.target) * 100;
   const formattedProgress = Math.min(100, progress).toFixed(1);
@@ -43,6 +45,22 @@ export default function CampaignCard({ campaign, index }: CampaignCardProps) {
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     return `${hours} hours left`;
   };
+
+  // Calculate user donation amount if userAddress is provided
+  const getUserDonationAmount = () => {
+    if (!userAddress || !campaign.donators) return null;
+    
+    let total = 0n;
+    for (let i = 0; i < campaign.donators.length; i++) {
+      if (campaign.donators[i].toLowerCase() === userAddress.toLowerCase()) {
+        total += campaign.donations[i];
+      }
+    }
+    return total > 0n ? total : null;
+  };
+
+  const userDonation = getUserDonationAmount();
+  const hasDonated = userDonation !== null;
 
   return (
     <motion.div 
@@ -95,6 +113,16 @@ export default function CampaignCard({ campaign, index }: CampaignCardProps) {
             )}
           </div>
         </div>
+        
+        {/* Donation badge */}
+        {hasDonated && showDonationBadge && (
+          <div className="absolute bottom-3 right-3 z-10">
+            <div className="px-3 py-1.5 rounded-full bg-green-500/80 text-white shadow-lg backdrop-blur-sm text-xs font-medium flex items-center">
+              <CheckCircle2 className="w-3 h-3 mr-1.5" />
+              <span>You donated {formatEther(userDonation!).substring(0, 5)} ETH</span>
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="p-6">

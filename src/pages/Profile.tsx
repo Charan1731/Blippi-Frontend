@@ -3,14 +3,16 @@ import { useWeb3 } from '../context/Web3Context';
 import { getContract } from '../contracts';
 import ProfileHeader from '../components/profile/ProfileHeader';
 import StatsCard from '../components/profile/StatsCard';
-import CampaignList from '../components/profile/CampaignList';
+import CampaignCard from '../components/campaign/CampaignCard';
+import DonatedCampaignList from '../components/profile/DonatedCampaignList';
 import { motion } from 'framer-motion';
-import { Pen, BookOpenText, MessageSquareText, Clock, Bookmark } from 'lucide-react';
+import { Pen, BookOpenText, MessageSquareText, Clock, Bookmark, Heart } from 'lucide-react';
 import type { Campaign } from '../types/campaign';
 import WalletButton from '../components/WalletButton';
 export default function Profile() {
   const { provider, account } = useWeb3();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [donatedCampaigns, setDonatedCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('blogs');
 
@@ -38,6 +40,28 @@ export default function Profile() {
             donations: campaign.donations || []
           }));
         setCampaigns(userCampaigns);
+
+        // Find campaigns the user has donated to
+        const donatedToCampaigns = allCampaigns
+          .filter((campaign: any) => 
+            campaign && campaign.exists && 
+            (campaign.donators || []).some((donator: string) => 
+              donator.toLowerCase() === account.toLowerCase()
+            )
+          )
+          .map((campaign: any) => ({
+            id: Number(campaign.id),
+            owner: campaign.owner,
+            title: campaign.title,
+            description: campaign.description,
+            target: campaign.target,
+            deadline: campaign.deadline,
+            amountCollected: campaign.amountCollected,
+            image: campaign.image,
+            donators: campaign.donators || [],
+            donations: campaign.donations || []
+          }));
+        setDonatedCampaigns(donatedToCampaigns);
       } catch (error) {
         console.error('Error fetching user campaigns:', error);
       } finally {
@@ -110,10 +134,7 @@ export default function Profile() {
   // Tab configuration
   const tabs = [
     { id: 'blogs', label: 'My Blogs', icon: <BookOpenText className="w-4 h-4 mr-2" /> },
-    { id: 'drafts', label: 'Drafts', icon: <Pen className="w-4 h-4 mr-2" /> },
-    { id: 'comments', label: 'Comments', icon: <MessageSquareText className="w-4 h-4 mr-2" /> },
-    { id: 'activity', label: 'Activity', icon: <Clock className="w-4 h-4 mr-2" /> },
-    { id: 'bookmarks', label: 'Bookmarks', icon: <Bookmark className="w-4 h-4 mr-2" /> }
+    { id: 'donations', label: 'My Donations', icon: <Heart className="w-4 h-4 mr-2" /> },
   ];
 
   return (
@@ -133,7 +154,7 @@ export default function Profile() {
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <StatsCard campaigns={campaigns} />
+          <StatsCard campaigns={campaigns} donatedCampaigns={donatedCampaigns} />
         </motion.div>
 
         <motion.div variants={itemVariants} className="bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
@@ -176,9 +197,23 @@ export default function Profile() {
                       </button>
                     </div>
                   ) : (
-                    <CampaignList campaigns={campaigns} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {campaigns.map((campaign, index) => (
+                        <CampaignCard 
+                          key={campaign.id} 
+                          campaign={campaign} 
+                          index={index} 
+                          userAddress={account}
+                          showDonationBadge={false}
+                        />
+                      ))}
+                    </div>
                   )}
                 </div>
+              )}
+              
+              {activeTab === 'donations' && (
+                <DonatedCampaignList campaigns={donatedCampaigns} userAddress={account} />
               )}
               
               {activeTab === 'drafts' && (
