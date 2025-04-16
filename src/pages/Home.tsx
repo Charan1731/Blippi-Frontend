@@ -240,7 +240,7 @@ export default function Home() {
               <div className="md:grid md:grid-cols-2 gap-8 relative z-10 p-6 md:p-8">
                 <div className="aspect-video overflow-hidden rounded-xl shadow-lg mb-6 md:mb-0">
                   <img
-                    src={featuredCampaign.image || 'https://images.unsplash.com/photo-1497493292307-31c376b6e479?auto=format&fit=crop&w=800'}
+                    src={featuredCampaign.image || 'https://next-images.123rf.com/index/_next/image/?url=https://assets-cdn.123rf.com/index/static/assets/top-section-bg.jpeg&w=3840&q=75'}
                     alt={featuredCampaign.title}
                     className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                   />

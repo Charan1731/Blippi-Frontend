@@ -96,7 +96,7 @@ export default function CampaignList({ campaigns }: CampaignListProps) {
 
             <div className="aspect-video overflow-hidden relative">
               <img
-                src={campaign.image || 'https://images.unsplash.com/photo-1497493292307-31c376b6e479?auto=format&fit=crop&w=800'}
+                src={campaign.image || 'https://next-images.123rf.com/index/_next/image/?url=https://assets-cdn.123rf.com/index/static/assets/top-section-bg.jpeg&w=3840&q=75'}
                 alt={campaign.title}
                 className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
               />

@@ -19,7 +19,7 @@ export default function CampaignPreview({ data }: CampaignPreviewProps) {
             alt="Campaign preview"
             className="w-full h-full object-cover"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1497493292307-31c376b6e479?auto=format&fit=crop&w=800';
+              (e.target as HTMLImageElement).src = 'https://next-images.123rf.com/index/_next/image/?url=https://assets-cdn.123rf.com/index/static/assets/top-section-bg.jpeg&w=3840&q=75';
             }}
           />
         </div>

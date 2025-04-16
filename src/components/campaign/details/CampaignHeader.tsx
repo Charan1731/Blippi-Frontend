@@ -85,7 +85,7 @@ export default function CampaignHeader({
             className="absolute inset-0 z-0"
           >
             <img
-              src={campaign.image || '/placeholder.png'}
+              src={campaign.image || 'https://next-images.123rf.com/index/_next/image/?url=https://assets-cdn.123rf.com/index/static/assets/top-section-bg.jpeg&w=3840&q=75'}
               alt={campaign.title}
               className="w-full h-full object-cover"
               loading="eager"
