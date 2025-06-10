@@ -1,7 +1,6 @@
-import React from 'react';
 import { formatEther } from 'ethers';
 import { formatDistanceToNow } from 'date-fns';
-import { User, Users, ArrowDown, Coins, Award, ArrowRight } from 'lucide-react';
+import {  Users, ArrowDown, Coins, Award, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface Donation {

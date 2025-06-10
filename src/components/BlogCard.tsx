@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatEther } from 'ethers';
 import { format } from 'date-fns';
-import { User, Clock, Target, Sparkles } from 'lucide-react';
+import { User, Clock, Target, } from 'lucide-react';
 import type { Campaign } from '../types/campaign';
 import { SummarizeButton } from './ai';
 
