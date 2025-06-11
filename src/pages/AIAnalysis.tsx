@@ -155,25 +155,14 @@ If the content is inappropriate, explain what specific part is inappropriate and
     }
   }, []);
 
-  const handleGenerateBlog = async () => {
+  const generateBlogWithRetry = async (retryCount = 0): Promise<void> => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.replace(/["']/g, '');
+    
     if (!apiKey) {
-      setError('Gemini API key is not configured');
-      return;
+      throw new Error('Gemini API key is not configured');
     }
 
-    if (!topic.trim() || !description.trim()) {
-      setError('Please provide both a topic and description');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    setGeneratedContent('');
-    setShowAnimatedText(false);
-
-    try {
-      const prompt = `You are an expert blog writer specializing in compelling storytelling and impact-driven content. Generate a **persuasive blog post** that will **inspire readers to support the cause through donations**, formatted in **Markdown**.
+    const prompt = `You are an expert blog writer specializing in compelling storytelling and impact-driven content. Generate a **persuasive blog post** that will **inspire readers to support the cause through donations**, formatted in **Markdown**.
 
 ### **Topic:** ${topic}  
 ### **Description:** ${description}  
@@ -228,57 +217,94 @@ Ensure the final blog post is structured using **Markdown** with:
 
 Return only the **fully written blog post** in Markdown format without explaining the structure separately.`;
 
-      const response = await fetch(`${GEMINI_API_ENDPOINT}?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+    const response = await fetch(`${GEMINI_API_ENDPOINT}?key=${apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 2048,
         },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: prompt }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 2048,
+        safetySettings: [
+          {
+            category: "HARM_CATEGORY_HARASSMENT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
           },
-          safetySettings: [
-            {
-              category: "HARM_CATEGORY_HARASSMENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_HATE_SPEECH",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            }
-          ]
-        })
-      });
+          {
+            category: "HARM_CATEGORY_HATE_SPEECH",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          }
+        ]
+      })
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: { message: 'Unknown error occurred' } }));
-        throw new Error(errorData.error?.message || `Failed to generate blog: ${response.status} ${response.statusText}`);
+    // Handle rate limiting and quota errors with retry logic
+    if (response.status === 429) {
+      if (retryCount < MAX_RETRIES) {
+        const delay = RETRY_DELAY * (retryCount + 1);
+        console.log(`Rate limited, retrying in ${delay}ms... (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return generateBlogWithRetry(retryCount + 1);
+      } else {
+        throw new Error('API rate limit exceeded. Please try again in a few minutes or check your API quota at https://ai.google.dev/gemini-api/docs/rate-limits');
       }
+    }
 
-      const data = await response.json();
+    if (response.status === 403) {
+      throw new Error('API quota exceeded. Please check your plan and billing details at https://ai.google.dev/gemini-api/docs/rate-limits');
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: { message: 'Unknown error occurred' } }));
       
-      if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        throw new Error('Invalid response format from API');
+      // Handle specific quota/billing errors
+      if (errorData.error?.message?.includes('quota') || errorData.error?.message?.includes('billing')) {
+        throw new Error('API quota exceeded. Please check your plan and billing details at https://ai.google.dev/gemini-api/docs/rate-limits');
       }
+      
+      throw new Error(errorData.error?.message || `Failed to generate blog: ${response.status} ${response.statusText}`);
+    }
 
-      // Store generated content with markdown formatting intact
-      const content = data.candidates[0].content.parts[0].text;
-      setGeneratedContent(content);
-      setShowAnimatedText(true);
+    const data = await response.json();
+    
+    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      throw new Error('Invalid response format from API');
+    }
+
+    // Store generated content with markdown formatting intact
+    const content = data.candidates[0].content.parts[0].text;
+    setGeneratedContent(content);
+    setShowAnimatedText(true);
+  };
+
+  const handleGenerateBlog = async () => {
+    if (!topic.trim() || !description.trim()) {
+      setError('Please provide both a topic and description');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setGeneratedContent('');
+    setShowAnimatedText(false);
+
+    try {
+      await generateBlogWithRetry();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate blog. Please try again.');
       console.error('Generation Error:', err);
