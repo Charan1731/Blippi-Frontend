@@ -4,11 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AnimatedText from '../components/AnimatedText';
 import MDEditor from '@uiw/react-md-editor';
 import { useTheme } from '../context/ThemeContext';
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
-const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
 const RETRY_DELAY = 5000;
 const MAX_RETRIES = 2;
 const CACHE_DURATION = 1000 * 60 * 60;
+
+// Initialize Gemini AI
+const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 interface CacheEntry {
   result: boolean;
@@ -74,46 +77,58 @@ export default function BlogGenerator() {
     }
 
     try {
-      const endpoint = new URL(GEMINI_API_ENDPOINT);
-      endpoint.searchParams.append('key', apiKey);
-
-      const response = await fetch(endpoint.toString(), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `Analyze if the following text is appropriate for a fundraising campaign. Only mark as inappropriate if the content contains explicit harmful content such as hate speech, threats, explicit adult content, or illegal activities(consider bettings and scams as high level threats).
+      const prompt = `Analyze if the following text is appropriate for a fundraising campaign. Only mark as inappropriate if the content contains explicit harmful content such as hate speech, threats, explicit adult content, or illegal activities(consider bettings and scams as high level threats).
 
 Text: ${text}
 
-If the content is inappropriate, explain what specific part is inappropriate and why. If the content is appropriate, reply with "true".`
-            }]
-          }],
-          safetySettings: [
-            {
-              category: "HARM_CATEGORY_HARASSMENT",
-              threshold: "BLOCK_ONLY_HIGH"
-            },
-            {
-              category: "HARM_CATEGORY_HATE_SPEECH",
-              threshold: "BLOCK_ONLY_HIGH"
-            },
-            {
-              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-              threshold: "BLOCK_ONLY_HIGH"
-            },
-            {
-              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-              threshold: "BLOCK_ONLY_HIGH"
-            }
-          ]
-        })
+If the content is inappropriate, explain what specific part is inappropriate and why. If the content is appropriate, reply with "true".`;
+
+      // Configure the model for content analysis
+      const model = genAI.getGenerativeModel({
+        model: 'gemini-1.5-flash',
+        safetySettings: [
+          {
+            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+            threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+            threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+            threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+            threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH
+          }
+        ]
       });
 
-      if (response.status === 429) {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const textResponse = response.text().trim();
+      
+      console.log('Gemini text response:', textResponse);
+      
+      let isAppropriate = true;
+      let details = '';
+      
+      if (textResponse.toLowerCase() === 'true') {
+        isAppropriate = true;
+      } else {
+        isAppropriate = false;
+        details = textResponse;
+      }
+      
+      setCachedResult(text, isAppropriate);
+      return { isAppropriate, details };
+    } catch (error: any) {
+      console.error('Content analysis error:', error);
+      
+      // Handle rate limiting
+      if (error?.message?.includes('429') || error?.message?.includes('rate limit')) {
         if (retryCount < MAX_RETRIES) {
           const delay = RETRY_DELAY * (retryCount + 1);
           console.log(`Rate limited, retrying in ${delay}ms...`);
@@ -123,34 +138,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
         console.log('Rate limit retries exhausted, proceeding with content');
         return { isAppropriate: true, error: 'Content moderation service is busy. Your content has been accepted.' };
       }
-
-      if (!response.ok) {
-        console.error('API error:', response.status, response.statusText);
-        return { isAppropriate: true, error: 'Content moderation service encountered an error. Your content has been accepted.' };
-      }
-
-      const data = await response.json();
       
-      console.log('Gemini API response:', JSON.stringify(data, null, 2));
-      
-      let result = true;
-      let details = '';
-      if (data.candidates && data.candidates.length > 0) {
-        const textResponse = data.candidates[0]?.content?.parts?.[0]?.text?.trim();
-        console.log('Gemini text response:', textResponse);
-        
-        if (textResponse.toLowerCase() === 'true') {
-          result = true;
-        } else {
-          result = false;
-          details = textResponse;
-        }
-      }
-      
-      setCachedResult(text, result);
-      return { isAppropriate: result, details: details };
-    } catch (error) {
-      console.error('Content analysis error:', error);
       return { isAppropriate: true, error: 'Content moderation check failed. Your content has been accepted.' };
     }
   }, []);
@@ -217,79 +205,68 @@ Ensure the final blog post is structured using **Markdown** with:
 
 Return only the **fully written blog post** in Markdown format without explaining the structure separately.`;
 
-    const response = await fetch(`${GEMINI_API_ENDPOINT}?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    // Configure the model for blog generation
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-pro',
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 2048,
       },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 2048,
+      safetySettings: [
+        {
+          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+          threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
         },
-        safetySettings: [
-          {
-            category: "HARM_CATEGORY_HARASSMENT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
-          },
-          {
-            category: "HARM_CATEGORY_HATE_SPEECH",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
-          },
-          {
-            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
-          },
-          {
-            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
-          }
-        ]
-      })
+        {
+          category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+          threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+        },
+        {
+          category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+          threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+        },
+        {
+          category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+          threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+        }
+      ]
     });
 
-    // Handle rate limiting and quota errors with retry logic
-    if (response.status === 429) {
-      if (retryCount < MAX_RETRIES) {
-        const delay = RETRY_DELAY * (retryCount + 1);
-        console.log(`Rate limited, retrying in ${delay}ms... (attempt ${retryCount + 1}/${MAX_RETRIES})`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        return generateBlogWithRetry(retryCount + 1);
-      } else {
-        throw new Error('API rate limit exceeded. Please try again in a few minutes or check your API quota at https://ai.google.dev/gemini-api/docs/rate-limits');
+    try {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const content = response.text();
+
+      if (!content) {
+        throw new Error('No content generated from API');
       }
-    }
 
-    if (response.status === 403) {
-      throw new Error('API quota exceeded. Please check your plan and billing details at https://ai.google.dev/gemini-api/docs/rate-limits');
-    }
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: { message: 'Unknown error occurred' } }));
+      // Store generated content with markdown formatting intact
+      setGeneratedContent(content);
+      setShowAnimatedText(true);
+    } catch (error: any) {
+      console.error('Generation error:', error);
       
-      // Handle specific quota/billing errors
-      if (errorData.error?.message?.includes('quota') || errorData.error?.message?.includes('billing')) {
+      // Handle rate limiting and quota errors with retry logic
+      if (error?.message?.includes('429') || error?.message?.includes('rate limit')) {
+        if (retryCount < MAX_RETRIES) {
+          const delay = RETRY_DELAY * (retryCount + 1);
+          console.log(`Rate limited, retrying in ${delay}ms... (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return generateBlogWithRetry(retryCount + 1);
+        } else {
+          throw new Error('API rate limit exceeded. Please try again in a few minutes or check your API quota at https://ai.google.dev/gemini-api/docs/rate-limits');
+        }
+      }
+
+      if (error?.message?.includes('403') || error?.message?.includes('quota') || error?.message?.includes('billing')) {
         throw new Error('API quota exceeded. Please check your plan and billing details at https://ai.google.dev/gemini-api/docs/rate-limits');
       }
       
-      throw new Error(errorData.error?.message || `Failed to generate blog: ${response.status} ${response.statusText}`);
+      throw error;
     }
-
-    const data = await response.json();
-    
-    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-      throw new Error('Invalid response format from API');
-    }
-
-    // Store generated content with markdown formatting intact
-    const content = data.candidates[0].content.parts[0].text;
-    setGeneratedContent(content);
-    setShowAnimatedText(true);
   };
 
   const handleGenerateBlog = async () => {

@@ -3,6 +3,7 @@ import { Loader2, FileText, Copy, CheckCircle, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AnimatedText from '../AnimatedText';
 import Modal from '../Modal';
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
 interface ContentSummarizerProps {
   isOpen: boolean;
@@ -11,7 +12,7 @@ interface ContentSummarizerProps {
   title?: string;
 }
 
-const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
+const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 const ContentSummarizer: React.FC<ContentSummarizerProps> = ({
   isOpen,
@@ -57,54 +58,43 @@ ${content}
 
 Return ONLY the summary text without any additional commentary or explanation.`;
 
-      const response = await fetch(`${GEMINI_API_ENDPOINT}?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      // Configure the model with generation settings
+      const modelWithConfig = genAI.getGenerativeModel({
+        model: 'gemini-1.5-flash',
+        generationConfig: {
+          temperature: 0.4,
+          topK: 32,
+          topP: 0.9,
+          maxOutputTokens: 1024,
         },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: prompt }]
-          }],
-          generationConfig: {
-            temperature: 0.4,
-            topK: 32,
-            topP: 0.9,
-            maxOutputTokens: 1024,
+        safetySettings: [
+          {
+            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
           },
-          safetySettings: [
-            {
-              category: "HARM_CATEGORY_HARASSMENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_HATE_SPEECH",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            },
-            {
-              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-              threshold: "BLOCK_MEDIUM_AND_ABOVE"
-            }
-          ]
-        })
+          {
+            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
+          }
+        ]
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: { message: 'Unknown error occurred' } }));
-        throw new Error(errorData.error?.message || `Failed to generate summary: ${response.status} ${response.statusText}`);
+      const result = await modelWithConfig.generateContent(prompt);
+      const response = await result.response;
+      const summaryText = response.text();
+
+      if (!summaryText) {
+        throw new Error('No summary generated from API');
       }
 
-      const data = await response.json();
-      
-      if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        throw new Error('Invalid response format from API');
-      }
-
-      const summaryText = data.candidates[0].content.parts[0].text;
       setSummary(summaryText);
       setShowAnimatedText(true);
     } catch (err) {
