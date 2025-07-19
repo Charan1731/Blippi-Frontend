@@ -83,7 +83,6 @@ Text: ${text}
 
 If the content is inappropriate, explain what specific part is inappropriate and why. If the content is appropriate, reply with "true".`;
 
-      // Configure the model for content analysis
       const model = genAI.getGenerativeModel({
         model: 'gemini-1.5-flash',
         safetySettings: [
@@ -107,7 +106,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
       });
 
       const result = await model.generateContent(prompt);
-      const response = await result.response;
+      const response = result.response;
       const textResponse = response.text().trim();
       
       console.log('Gemini text response:', textResponse);
@@ -207,7 +206,7 @@ Return only the **fully written blog post** in Markdown format without explainin
 
     // Configure the model for blog generation
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-pro',
+      model: 'gemini-1.5-flash',
       generationConfig: {
         temperature: 0.7,
         topK: 40,
