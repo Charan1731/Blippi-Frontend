@@ -1,18 +1,17 @@
-import { RainbowKitProvider, getDefaultWallets } from '@rainbow-me/rainbowkit';
+import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider, http, createConfig } from 'wagmi';
 import { sepolia } from 'wagmi/chains';
 import React from 'react';
 import '@rainbow-me/rainbowkit/styles.css';
 
-const { wallets } = getDefaultWallets();
+// const { wallets } = getDefaultWallets();
 const sepoliaChain = sepolia;
 
-// Updated to use Infura or Alchemy which have proper CORS setup
 const config = createConfig({
   chains: [sepoliaChain],
   transports: {
-    [sepoliaChain.id]: http('https://eth-sepolia.g.alchemy.com/v2/demo'),
+    [sepoliaChain.id]: http('https://eth-sepolia.g.alchemy.com/v2/PuUVsZ8f1YrRGtbp295ycUcpSl8N6w58'),
   },
 });
 

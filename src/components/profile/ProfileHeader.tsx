@@ -1,6 +1,7 @@
 import React from 'react';
-import { User, Copy, CheckCircle, Sparkles, Wallet, Shield } from 'lucide-react';
+import { User, Copy, CheckCircle, Sparkles, Wallet, Coins } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useAccount, useBalance } from 'wagmi';
 
 interface ProfileHeaderProps {
   address: string;
@@ -8,6 +9,11 @@ interface ProfileHeaderProps {
 
 export default function ProfileHeader({ address }: ProfileHeaderProps) {
   const [copied, setCopied] = React.useState(false);
+  
+  const { address: connectedAddress } = useAccount();
+  const { data: balanceData, isLoading: balanceLoading, isError: balanceError } = useBalance({
+    address: connectedAddress,
+  });
 
   const copyAddress = () => {
     navigator.clipboard.writeText(address);
@@ -124,8 +130,35 @@ export default function ProfileHeader({ address }: ProfileHeaderProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mt-4"
             >
+              {/* Balance Card */}
+              <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-md">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                    <Coins className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Balance</h3>
+                    <div className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white">
+                      {balanceLoading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                          <span className="text-sm">Loading...</span>
+                        </div>
+                      ) : balanceError ? (
+                        <span className="text-red-500 text-sm">Error</span>
+                      ) : (
+                        <>
+                          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                          <span>{Number(balanceData?.formatted || 0).toFixed(4)} {balanceData?.symbol || 'ETH'}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
               {/* Network Card */}
               <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-md">
                 <div className="flex items-center gap-3">
@@ -143,7 +176,7 @@ export default function ProfileHeader({ address }: ProfileHeaderProps) {
               </div>
               
               {/* Security Card */}
-              <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-md">
+              {/* <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-md">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
                     <Shield className="w-5 h-5 text-white" />
@@ -153,7 +186,7 @@ export default function ProfileHeader({ address }: ProfileHeaderProps) {
                     <p className="font-semibold text-gray-900 dark:text-white">Verified Account</p>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </motion.div>
             
             {/* Role Tags */}
