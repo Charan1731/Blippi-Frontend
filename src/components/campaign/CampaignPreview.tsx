@@ -1,27 +1,40 @@
-import React from 'react';
-import { formatEther } from 'ethers';
+// React import removed as it's not needed in modern React
 import type { CampaignFormData } from '../../types/campaign';
 import MDEditor from '@uiw/react-md-editor';
 
 interface CampaignPreviewProps {
   data: CampaignFormData;
+  imagePreview?: string;
 }
 
-export default function CampaignPreview({ data }: CampaignPreviewProps) {
+export default function CampaignPreview({ data, imagePreview }: CampaignPreviewProps) {
   return (
     <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 shadow-xl">
       <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Preview</h3>
       
-      {data.image && (
+      {(imagePreview || data.image) && (
         <div className="aspect-video mb-6 overflow-hidden rounded-xl">
           <img
-            src={data.image}
+            src={imagePreview || data.image}
             alt="Campaign preview"
             className="w-full h-full object-cover"
             onError={(e) => {
               (e.target as HTMLImageElement).src = 'https://next-images.123rf.com/index/_next/image/?url=https://assets-cdn.123rf.com/index/static/assets/top-section-bg.jpeg&w=3840&q=75';
             }}
           />
+        </div>
+      )}
+      
+      {!imagePreview && !data.image && (
+        <div className="aspect-video mb-6 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Upload an image to see preview</p>
+          </div>
         </div>
       )}
       
