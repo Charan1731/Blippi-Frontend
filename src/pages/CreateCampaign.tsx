@@ -10,7 +10,7 @@ import MDEditor from '@uiw/react-md-editor';
 import Modal from '../components/Modal';
 import SuccessConfirmation from '../components/SuccessConfirmation';
 import { motion } from 'framer-motion';
-import { ShieldCheck, Image, Rocket, AlertCircle, CheckCircle } from 'lucide-react';
+import { ShieldCheck, Image, Rocket, AlertCircle, CheckCircle, Upload, X, FileImage } from 'lucide-react';
 
 interface CampaignFormData {
   title: string;
@@ -18,6 +18,7 @@ interface CampaignFormData {
   target: string;
   deadline: string;
   image: string;
+  imageFile?: File;
 }
 
 const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
@@ -48,11 +49,16 @@ export default function CreateCampaign() {
     target: '',
     deadline: '',
     image: '',
+    imageFile: undefined,
   });
   const [contentError, setContentError] = useState('');
   const [newCampaignId, setNewCampaignId] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string>('basic');
   const [validationAttempted, setValidationAttempted] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [uploadingToS3, setUploadingToS3] = useState(false);
 
   const getCachedResult = (text: string): boolean | null => {
     const cached = contentCache.get(text);
@@ -172,7 +178,6 @@ If the content is inappropriate, explain what specific part is inappropriate and
     }
   }, []);
 
-
   const validateForm = useCallback((): boolean => {
     const newErrors: Partial<Record<keyof CampaignFormData, string>> = {};
     
@@ -219,6 +224,50 @@ If the content is inappropriate, explain what specific part is inappropriate and
       setLoading(true);
       setContentError('');
 
+      // Upload image to S3 if file is selected
+      let imageUrl = formData.image;
+      if (formData.imageFile) {
+        try {
+          setUploadingToS3(true);
+          const uploadFormData = new FormData();
+          uploadFormData.append('image', formData.imageFile);
+          
+          const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+          const uploadResponse = await fetch(`${backendUrl}/upload`, {
+            method: 'POST',
+            body: uploadFormData,
+          });
+          
+          if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.json();
+            throw new Error(errorData.message || 'Failed to upload image');
+          }
+          
+          const uploadResult = await uploadResponse.json();
+          imageUrl = uploadResult.data.url;
+          
+          // Update form data with S3 URL
+          setFormData(prev => ({ ...prev, image: imageUrl }));
+          setUploadingToS3(false);
+        } catch (uploadError) {
+          console.error('Image upload error:', uploadError);
+          setUploadingToS3(false);
+          
+          let errorMessage = 'Failed to upload image. Please try again.';
+          if (uploadError instanceof Error) {
+            if (uploadError.message === 'Failed to fetch') {
+              errorMessage = 'Cannot connect to server. Please ensure the backend is running on port 3000.';
+            } else {
+              errorMessage = `Image upload failed: ${uploadError.message}`;
+            }
+          }
+          
+          setContentError(errorMessage);
+          setLoading(false);
+          return;
+        }
+      }
+
       setIsModeratingContent(true);
       const combinedText = `Title: ${formData.title.trim()}\nDescription: ${formData.description.trim()}`;
       const { isAppropriate, error, details } = await analyzeContent(combinedText);
@@ -256,7 +305,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
         formData.description.trim(),
         parseEther(formData.target),
         deadline,
-        formData.image.trim(),
+        imageUrl.trim(),
         { 
           gasLimit: 3000000
         }
@@ -326,6 +375,75 @@ If the content is inappropriate, explain what specific part is inappropriate and
 
   const handleCloseContentModerationModal = () => {
     setShowContentModerationModal(false);
+  };
+
+  const removeFile = () => {
+    setFormData(prev => ({ ...prev, imageFile: undefined, image: '' }));
+    setImagePreview('');
+    setErrors(prev => ({ ...prev, image: '' }));
+    setUploadingFile(false);
+  };
+
+  const handleFileSelect = async (file: File) => {
+    const error = validateFile(file);
+    if (error) {
+      setErrors(prev => ({ ...prev, image: error }));
+      return;
+    }
+
+    setUploadingFile(true);
+    setFormData(prev => ({ ...prev, imageFile: file, image: file.name }));
+    setErrors(prev => ({ ...prev, image: '' }));
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+      setUploadingFile(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const validateFile = (file: File): string | null => {
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    
+    if (!allowedTypes.includes(file.type)) {
+      return 'Please upload a valid image file (JPEG, PNG, GIF, or WebP)';
+    }
+    
+    if (file.size > maxSize) {
+      return 'File size must be less than 5MB';
+    }
+    
+    return null;
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileSelect(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragActive(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragActive(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragActive(false);
+    
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      handleFileSelect(file);
+    }
   };
 
   // Animation variants
@@ -538,17 +656,101 @@ If the content is inappropriate, explain what specific part is inappropriate and
                     animate="visible"
                   >
                     <motion.div variants={fadeIn}>
-                      <FloatingInput
-                        id="image"
-                        type="url"
-                        label="Blog Image URL"
-                        value={formData.image}
-                        onChange={handleInputChange}
-                        placeholder=""
-                        className="bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm"
-                      />
-                      <p className="mt-1 text-gray-500 dark:text-gray-400 text-xs italic">
-                        {formData.image ? 'Image preview will appear on the right panel' : 'Image is optional but highly recommended for better engagement'}
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Blog Image
+                      </label>
+                      
+                      {!formData.imageFile ? (
+                        <div
+                          className={`
+                            relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200
+                            ${dragActive 
+                              ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20' 
+                              : 'border-gray-300 dark:border-gray-600 hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10'
+                            }
+                          `}
+                          onDragOver={handleDragOver}
+                          onDragLeave={handleDragLeave}
+                          onDrop={handleDrop}
+                        >
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          />
+                          <div className="space-y-4">
+                            <div className="mx-auto w-16 h-16 bg-blue-100 dark:bg-blue-900/40 rounded-full flex items-center justify-center">
+                              <Upload className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div>
+                              <p className="text-lg font-medium text-gray-900 dark:text-white">
+                                Drop your image here, or <span className="text-blue-600 dark:text-blue-400">browse</span>
+                              </p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                Supports: JPEG, PNG, GIF, WebP (max 5MB)
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="relative bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center space-x-4">
+                              <div className="flex-shrink-0">
+                                {imagePreview ? (
+                                  <img 
+                                    src={imagePreview} 
+                                    alt="Preview" 
+                                    className="w-16 h-16 object-cover rounded-lg"
+                                  />
+                                ) : (
+                                  <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center">
+                                    <FileImage className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                  {formData.imageFile.name}
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  {(formData.imageFile.size / 1024 / 1024).toFixed(2)} MB
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={removeFile}
+                                className="flex-shrink-0 p-2 text-gray-400 hover:text-red-500 transition-colors"
+                              >
+                                <X className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </div>
+                          
+                          {uploadingFile ? (
+                            <div className="flex items-center text-blue-600 dark:text-blue-400 text-sm">
+                              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2" />
+                              <span>Processing image...</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center text-green-600 dark:text-green-400 text-sm">
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              <span>Image uploaded successfully</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {errors.image && (
+                        <p className="mt-2 text-sm text-red-600 flex items-center">
+                          <AlertCircle className="w-4 h-4 mr-1" />
+                          {errors.image}
+                        </p>
+                      )}
+                      
+                      <p className="mt-2 text-gray-500 dark:text-gray-400 text-xs italic">
+                        {formData.imageFile ? 'Image preview will appear on the right panel' : 'Image is optional but highly recommended for better engagement'}
                       </p>
                     </motion.div>
 
@@ -606,7 +808,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
                     {loading ? (
                       <div className="flex items-center justify-center">
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                        {isModeratingContent ? 'Checking content...' : 'Creating Campaign...'}
+                        {uploadingToS3 ? 'Uploading image...' : (isModeratingContent ? 'Checking content...' : 'Creating Campaign...')}
                       </div>
                     ) : (
                       'Create Blog'
@@ -624,7 +826,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
             >
               <div className="sticky top-20">
                 <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Blog Preview</h3>
-                <CampaignPreview data={formData} />
+                <CampaignPreview data={formData} imagePreview={imagePreview} />
               </div>
             </motion.div>
           </div>
