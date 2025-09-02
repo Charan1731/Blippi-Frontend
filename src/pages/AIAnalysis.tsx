@@ -681,15 +681,23 @@ Return only the **fully written blog post** in Markdown format without explainin
                             {isCopied ? <CheckCircle className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5" />}
                           </motion.button>
                           <motion.button
-                            whileHover={{ scale: 1.05 }}
+                            whileHover={{ scale: 1.05, y: -2 }}
                             whileTap={{ scale: 0.95 }}
-                            transition={{ type: "spring", duration: 1 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
                             onClick={() => {
                               navigate('/create',{ state: { topic, description, content: editedContent } });
                             }}
-                            className="p-2.5 bg-blue-200/80 dark:bg-blue-300/80 text-blue-800 dark:text-blue-300 rounded-lg shadow-sm border border-gray-200/50 dark:border-gray-600/50 hover:bg-blue-400 dark:hover:bg-blue-400/50 transition-colors"
+                            className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl border border-blue-500/20 dark:border-purple-500/20 transition-all duration-300 flex items-center gap-2 group"
                           >
-                            Move to Create Blog
+                            <svg 
+                              className="w-4 h-4 transition-transform group-hover:translate-x-1" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                            <span>Create Campaign</span>
                           </motion.button>
                         </div>
                       </div>
