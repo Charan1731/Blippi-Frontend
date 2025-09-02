@@ -501,17 +501,29 @@ If the content is inappropriate, explain what specific part is inappropriate and
         body: JSON.stringify({
           contents: [{
             parts: [{
-              text: `You are an expert startup consultant specializing in crafting compelling crowdfunding pitches. The user has provided the following pitch idea:
-                  title:${formData.title}
-                  description:${formData.description}
+              text: `You are an expert startup consultant and professional crowdfunding copywriter. Based on the following project details:
+                  Title: ${formData.title}
+                  Description: ${formData.description}
 
-                  Your task:
-                  1. Make the pitch more engaging, persuasive, and professional.
-                  2. Highlight the problem being solved, the solution, and the unique value proposition.
-                  3. Keep the tone inspiring and optimistic.
-                  4. Make it concise (under 200 words) and suitable for a crowdfunding platform.
+                  Your tasks:
+                  1. Write a highly engaging, persuasive, and professional crowdfunding pitch.
+                  2. Include the following sections:
+                  3. Compelling Headline: A short, attention-grabbing title.
+                  4. Introduction: Start with an emotional hook that resonates with the audience.
+                  5. The Problem: Clearly describe the pain point or challenge people face.
+                  6. The Solution: Explain how this project solves that problem in a unique and innovative way.
+                  7. Impact: Show how this will change lives or create positive impact.
+                  8. Why Support Us: Explain why backers should believe in this project and what makes it special (unique value proposition).
+                  9. Call to Action: End with a strong, inspiring message encouraging contributions.
+                  10. If any currency is included give it in ETH.
 
-                  Return the enhanced pitch only, without extra explanations.'`
+                  Make the tone passionate, trustworthy, and optimistic.
+
+                  Keep the total length between 300-500 words for maximum storytelling impact.
+
+                  Use clear, simple language with a mix of emotional appeal and logical reasoning.
+
+                  Return only the final crowdfunding pitch in well-formatted paragraphs with headings. Do not include any instructions or extra notes.`
             }]
           }],
         })

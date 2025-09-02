@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
 import { Loader2, FileText, PenTool, Copy, CheckCircle, Edit2, Eye, Zap, Sparkles, ArrowRight, Wand2, Brain, Lightbulb, Target, BookOpen, Rocket } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -154,58 +155,58 @@ If the content is inappropriate, explain what specific part is inappropriate and
 
     const prompt = `You are an expert blog writer specializing in compelling storytelling and impact-driven content. Generate a **persuasive blog post** that will **inspire readers to support the cause through donations**, formatted in **Markdown**.
 
-### **Topic:** ${topic}  
-### **Description:** ${description}  
+                     Topic: ${topic}  
+                     Description: ${description}  
 
-## **Guidelines for Writing the Blog Post:**
+                     Guidelines for Writing the Blog Post:
 
-### **1. Powerful Opening**  
-- Begin with an **emotional hook** that creates a strong connection with the reader.  
-- Use storytelling techniques to **draw them in** and make them feel personally involved.  
+                     1. Powerful Opening  
+                    - Begin with an emotional hook that creates a strong connection with the reader.  
+                    - Use storytelling techniques to draw them in and make them feel personally involved.  
 
-### **2. The Challenge**  
-- Clearly describe the **problem** in **human terms**.  
-- Use real-world examples or relatable scenarios to **illustrate the severity** of the issue.  
+                     2. The Challenge  
+                    - Clearly describe the problem in human terms.  
+                    - Use real-world examples or relatable scenarios to illustrate the severity of the issue.  
 
-### **3. The Solution**  
-- Explain **how donations** will directly **address the problem**.  
-- Provide a clear, actionable plan that **builds trust and credibility**.  
+                     3. The Solution  
+                    - Explain how donations will directly address the problem.  
+                    - Provide a clear, actionable plan that builds trust and credibility.  
 
-### **4. Impact Story**  
-- Share a **compelling real-life example or testimonial** that shows the **tangible difference** donations can make.  
-- Make the reader **visualize the outcome** of their support.  
+                     4. Impact Story  
+                    - Share a compelling real-life example or testimonial that shows the tangible difference donations can make.  
+                    - Make the reader visualize the outcome of their support.  
 
-### **5. Call to Action (CTA)**  
-- Provide a **strong, clear directive** on how to donate.  
-- Use bullet points to break down **different donation amounts in ETH** and their specific impact:  
+                     5. Call to Action (CTA)  
+                    - Provide a strong, clear directive on how to donate.  
+                    - Use bullet points to break down different donation amounts in ETH and their specific impact:  
 
-  - **0.01 ETH**: Provides food and shelter for a child for a day.  
-  - **0.05 ETH**: Supports healthcare for a family in need.  
-  - **0.1 ETH**: Funds an entire education program for a child.  
+                      - 0.01 ETH: Provides food and shelter for a child for a day.  
+                      - 0.05 ETH: Supports healthcare for a family in need.  
+                      - 0.1 ETH: Funds an entire education program for a child.  
 
-### **6. Formatting for Readability**  
-- Use **bold** for emphasis.  
-- Break content into **short, engaging paragraphs**.  
-- Include **bullet points and numbered lists** for clarity.  
-- Use **quotes or testimonials** to reinforce credibility.  
+                     6. Formatting for Readability  
+                    - Use bold for emphasis.  
+                    - Break content into short, engaging paragraphs.  
+                    - Include bullet points and numbered lists for clarity.  
+                    - Use quotes or testimonials to reinforce credibility.  
 
-### **7. Conclusion**  
-- End with a **powerful, urgent message** that reinforces why donating **now** is crucial.  
-- Leave readers with a **sense of purpose and inspiration**.  
+                     7. Conclusion  
+                    - End with a powerful, urgent message that reinforces why donating now is crucial.  
+                    - Leave readers with a sense of purpose and inspiration.  
 
----
+                    ---
 
-## **Output Format:**
-Ensure the final blog post is structured using **Markdown** with:  
-- **Headers (#, ##, ###)** for sections.  
-- **Bold text (**bold**)** for emphasis.  
-- **Bullet points (-)** for lists.  
-- **Numbered lists (1. 2. 3.) when needed.**  
-- **Quotes (>) for impactful messages.**  
+                     Output Format:
+                    Ensure the final blog post is structured using Markdown with:  
+                    - Headers (#, ##, ) for sections.  
+                    - Bold text (bold) for emphasis.  
+                    - Bullet points (-) for lists.  
+                    - Numbered lists (1. 2. 3.) when needed.  
+                    - Quotes (>) for impactful messages.  
 
-**Do not use markdown symbols in the prompt, but ensure the final output is in proper Markdown format.**  
+                    Do not use markdown symbols in the prompt, but ensure the final output is in proper Markdown format.  
 
-Return only the **fully written blog post** in Markdown format without explaining the structure separately.`;
+                    Return only the fully written blog post in Markdown format without explaining the structure separately.`;
 
     // Configure the model for blog generation
     const model = genAI.getGenerativeModel({
