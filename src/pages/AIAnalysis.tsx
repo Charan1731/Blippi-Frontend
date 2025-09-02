@@ -5,6 +5,7 @@ import AnimatedText from '../components/AnimatedText';
 import MDEditor from '@uiw/react-md-editor';
 import { useTheme } from '../context/ThemeContext';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
+import { useNavigate } from 'react-router-dom';
 
 const RETRY_DELAY = 5000;
 const MAX_RETRIES = 2;
@@ -32,6 +33,8 @@ export default function BlogGenerator() {
   const [editedContent, setEditedContent] = useState('');
   const [showAnimatedText, setShowAnimatedText] = useState(false);
   const { theme } = useTheme();
+
+  const navigate = useNavigate();
 
   // Update editedContent when new content is generated
   useEffect(() => {
@@ -676,6 +679,17 @@ Return only the **fully written blog post** in Markdown format without explainin
                             title="Copy to clipboard"
                           >
                             {isCopied ? <CheckCircle className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5" />}
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            transition={{ type: "spring", duration: 1 }}
+                            onClick={() => {
+                              navigate('/create',{ state: { topic, description, content: editedContent } });
+                            }}
+                            className="p-2.5 bg-blue-200/80 dark:bg-blue-300/80 text-blue-800 dark:text-blue-300 rounded-lg shadow-sm border border-gray-200/50 dark:border-gray-600/50 hover:bg-blue-400 dark:hover:bg-blue-400/50 transition-colors"
+                          >
+                            Move to Create Blog
                           </motion.button>
                         </div>
                       </div>

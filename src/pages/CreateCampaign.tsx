@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useCallback, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useWeb3 } from '../context/Web3Context';
 import { getContract } from '../contracts';
 import { parseEther } from 'ethers';
@@ -59,6 +59,20 @@ export default function CreateCampaign() {
   const [imagePreview, setImagePreview] = useState<string>('');
   const [uploadingFile, setUploadingFile] = useState(false);
   const [uploadingToS3, setUploadingToS3] = useState(false);
+
+  const location = useLocation();
+
+  const content = location.state?.content || '';
+  const topic = location.state?.topic || '';
+
+  useEffect(() => {
+    if (content) {
+      setFormData(prev => ({ ...prev, description: content }));
+    }
+    if (topic) {
+      setFormData(prev => ({ ...prev, title: topic }));
+    }
+  }, [content, topic]);
 
   const getCachedResult = (text: string): boolean | null => {
     const cached = contentCache.get(text);
