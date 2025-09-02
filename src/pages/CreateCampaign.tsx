@@ -10,7 +10,7 @@ import MDEditor from '@uiw/react-md-editor';
 import Modal from '../components/Modal';
 import SuccessConfirmation from '../components/SuccessConfirmation';
 import { motion } from 'framer-motion';
-import { ShieldCheck, Image, Rocket, AlertCircle, CheckCircle, Upload, X, FileImage } from 'lucide-react';
+import { ShieldCheck, Image, Rocket, AlertCircle, CheckCircle, Upload, X, FileImage, Sparkle } from 'lucide-react';
 
 interface CampaignFormData {
   title: string;
@@ -462,6 +462,69 @@ If the content is inappropriate, explain what specific part is inappropriate and
     }
   };
 
+  const handleEnhanceContent = async() => {
+
+    const apiKey = import.meta.env.VITE_GEMINI?.replace(/["']/g, '');
+    
+    if (!apiKey) {
+      console.error('Content analysis service is not properly configured - missing API key');
+      return { 
+        isAppropriate: true, 
+        error: 'Content moderation service is not available. Please check your settings or try again later.'
+      };
+    }
+
+    try {
+      setLoading(true)
+      const endpoint = new URL(GEMINI_API_ENDPOINT);
+      endpoint.searchParams.append('key', apiKey);
+
+      const response = await fetch(endpoint.toString(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `You are an expert startup consultant specializing in crafting compelling crowdfunding pitches. The user has provided the following pitch idea:
+                  title:${formData.title}
+                  description:${formData.description}
+
+                  Your task:
+                  1. Make the pitch more engaging, persuasive, and professional.
+                  2. Highlight the problem being solved, the solution, and the unique value proposition.
+                  3. Keep the tone inspiring and optimistic.
+                  4. Make it concise (under 200 words) and suitable for a crowdfunding platform.
+
+                  Return the enhanced pitch only, without extra explanations.'`
+            }]
+          }],
+        })
+      });
+      if (!response.ok) {
+        console.error('API error:', response.status, response.statusText);
+        return { isAppropriate: true, error: 'Content moderation service encountered an error. Your content has been accepted.' };
+      }
+
+      const data = await response.json();
+      
+      console.log(JSON.stringify(data.candidates[0].content.parts[0].text));
+
+      const enhancedPitch = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+      setFormData(prev => ({ ...prev, description: enhancedPitch }));
+
+      setLoading(false)
+
+      
+    } catch (error) {
+      setLoading(false)
+      console.error('Content analysis error:', error);
+      return { isAppropriate: true, error: 'Content moderation check failed. Your content has been accepted.' };
+    }
+  }
+
   // Check if form is ready for submission
   const isFormComplete = formData.title && formData.description && formData.target && formData.deadline;
 
@@ -593,9 +656,49 @@ If the content is inappropriate, explain what specific part is inappropriate and
                     </motion.div>
 
                     <motion.div variants={fadeIn} className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Blog Description
-                      </label>
+                      <div className='flex items-center justify-between'>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Blog Description
+                        </label>
+                        <button
+                        onClick={handleEnhanceContent}
+                        disabled={loading}
+                        className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-all bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-medium ${
+                          loading ? "opacity-70 cursor-not-allowed" : ""
+                        }`}
+                      >
+                        {loading ? (
+                          <>
+                            <svg
+                              className="animate-spin h-5 w-5 text-blue-600 dark:text-blue-400"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z"
+                              ></path>
+                            </svg>
+                            <span>Enhancing...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkle className='w-4 h-4'/>
+                            <span>Enhance Pitch</span>
+                          </>
+                        )}
+                      </button>
+                      </div>
                       <div data-color-mode="light" className="w-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                         <MDEditor
                           value={formData.description}
