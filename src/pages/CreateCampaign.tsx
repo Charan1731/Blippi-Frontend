@@ -246,7 +246,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
           const uploadFormData = new FormData();
           uploadFormData.append('image', formData.imageFile);
           
-          const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+          const backendUrl = 'https://s3-practice-1.onrender.com';
           const uploadResponse = await fetch(`${backendUrl}/upload`, {
             method: 'POST',
             body: uploadFormData,
