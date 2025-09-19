@@ -478,66 +478,29 @@ If the content is inappropriate, explain what specific part is inappropriate and
 
   const handleEnhanceContent = async() => {
 
-    const apiKey = import.meta.env.VITE_GEMINI?.replace(/["']/g, '');
-    
-    if (!apiKey) {
-      console.error('Content analysis service is not properly configured - missing API key');
-      return { 
-        isAppropriate: true, 
-        error: 'Content moderation service is not available. Please check your settings or try again later.'
-      };
-    }
-
     try {
       setLoading(true)
-      const endpoint = new URL(GEMINI_API_ENDPOINT);
-      endpoint.searchParams.append('key', apiKey);
 
-      const response = await fetch(endpoint.toString(), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch('http://localhost:3000/enhnaceContent',{
+        method:"POST",
+        headers:{
+          'Content-type':'application/json'
         },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `You are an expert startup consultant and professional crowdfunding copywriter. Based on the following project details:
-                  Title: ${formData.title}
-                  Description: ${formData.description}
-
-                  Your tasks:
-                  1. Write a highly engaging, persuasive, and professional crowdfunding pitch.
-                  2. Include the following sections:
-                  3. Compelling Headline: A short, attention-grabbing title.
-                  4. Introduction: Start with an emotional hook that resonates with the audience.
-                  5. The Problem: Clearly describe the pain point or challenge people face.
-                  6. The Solution: Explain how this project solves that problem in a unique and innovative way.
-                  7. Impact: Show how this will change lives or create positive impact.
-                  8. Why Support Us: Explain why backers should believe in this project and what makes it special (unique value proposition).
-                  9. Call to Action: End with a strong, inspiring message encouraging contributions.
-                  10. If any currency is included give it in ETH.
-
-                  Make the tone passionate, trustworthy, and optimistic.
-
-                  Keep the total length between 300-500 words for maximum storytelling impact.
-
-                  Use clear, simple language with a mix of emotional appeal and logical reasoning.
-
-                  Return only the final crowdfunding pitch in well-formatted paragraphs with headings. Do not include any instructions or extra notes.`
-            }]
-          }],
+        body:JSON.stringify({
+          title:formData.title,
+          description:formData.description
         })
-      });
+      })
+
+
       if (!response.ok) {
         console.error('API error:', response.status, response.statusText);
         return { isAppropriate: true, error: 'Content moderation service encountered an error. Your content has been accepted.' };
       }
 
       const data = await response.json();
-      
-      console.log(JSON.stringify(data.candidates[0].content.parts[0].text));
 
-      const enhancedPitch = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const enhancedPitch = data?.data|| '';
 
       setFormData(prev => ({ ...prev, description: enhancedPitch }));
 
@@ -551,7 +514,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
     }
   }
 
-  // Check if form is ready for submission
+
   const isFormComplete = formData.title && formData.description && formData.target && formData.deadline;
 
   return (
@@ -728,7 +691,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
                       <div data-color-mode="light" className="w-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                         <MDEditor
                           value={formData.description}
-                          onChange={(value) => handleInputChange(value || '', 'description')}
+                          onChange={(value) => handleInputChange(value || '')}
                           preview="edit"
                           height={300}
                           className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm dark:text-white rounded-lg"
