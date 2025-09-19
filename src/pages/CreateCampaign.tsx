@@ -481,7 +481,7 @@ If the content is inappropriate, explain what specific part is inappropriate and
     try {
       setLoading(true)
 
-      const response = await fetch('http://localhost:3000/enhnaceContent',{
+      const response = await fetch('https://s3-practice-1.onrender.com/enhnaceContent',{
         method:"POST",
         headers:{
           'Content-type':'application/json'
