@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { formatEther } from 'ethers';
 import { ArrowRight, Clock, Users, Calendar, Heart, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import ProgressBar from './ProgressBar';
 import type { Campaign } from '../../types/campaign';
 
 interface CampaignCardProps {

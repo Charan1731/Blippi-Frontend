@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useWeb3 } from '../context/Web3Context';
 import { getContract } from '../contracts';
@@ -13,7 +13,7 @@ import Modal from '../components/Modal';
 import SuccessConfirmation from '../components/SuccessConfirmation';
 import DeleteConfirmation from '../components/DeleteConfirmation';
 import { motion } from 'framer-motion';
-import { Clock, ArrowLeft, Heart, Share2, MessageCircle, Users, Sparkles } from 'lucide-react';
+import { Clock, ArrowLeft, Users, Sparkles } from 'lucide-react';
 import { SummarizeButton } from '../components/ai';
 
 export default function CampaignDetails() {
@@ -27,8 +27,6 @@ export default function CampaignDetails() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDonationSuccess, setShowDonationSuccess] = useState(false);
   const [lastDonationAmount, setLastDonationAmount] = useState('');
-  const [likeCount, setLikeCount] = useState(0);
-  const [hasLiked, setHasLiked] = useState(false);
 
   useEffect(() => {
     const fetchCampaign = async () => {
@@ -37,18 +35,14 @@ export default function CampaignDetails() {
       try {
         const contract = getContract(provider);
         const campaigns = await contract.getCampaigns();
-        
-        // Find the campaign with the matching id and ensure it exists
         const campaignData = campaigns[parseInt(id)];
         
         if (!campaignData || !campaignData.exists) {
           setLoading(false);
-          return; // Campaign not found or doesn't exist
+          return;
         }
-        
-        // Map the data to our Campaign type
         setCampaign({
-          id: Number(campaignData.id),  // Store the campaign ID
+          id: Number(campaignData.id),
           owner: campaignData.owner,
           title: campaignData.title,
           description: campaignData.description,
@@ -59,9 +53,6 @@ export default function CampaignDetails() {
           donators: campaignData.donators || [],
           donations: campaignData.donations || []
         });
-
-        // Set random initial like count (would come from backend in real app)
-        setLikeCount(Math.floor(Math.random() * 50) + 5);
       } catch (error) {
         console.error('Error fetching campaign:', error);
       } finally {
@@ -115,7 +106,6 @@ export default function CampaignDetails() {
   const handleDeleteCampaign = async () => {
     if (!signer || !id || !provider || !campaign) return;
     
-    // Check if user is the campaign owner
     if (account?.toLowerCase() !== campaign.owner.toLowerCase()) {
       setErrorMessage('You are not authorized to delete this Blog');
       return;
@@ -135,7 +125,21 @@ export default function CampaignDetails() {
       console.log('Delete transaction submitted:', tx.hash);
       await tx.wait();
       
-      // Redirect to home page after successful deletion
+      const imageUrl = campaign?.image;
+      if(imageUrl){
+        const response = await fetch("http://localhost:3000/delete",{
+          method:"POST",
+          headers:{
+            'Content-type':"application/json"
+          },
+          body:JSON.stringify({imageUrl})
+        })
+        if(response.ok){
+          console.log("Image deleted")
+        }else{
+          console.log("Failed to delete image")
+        }
+      }
       navigate('/');
     } catch (error) {
       console.error('Error deleting campaign:', error);
