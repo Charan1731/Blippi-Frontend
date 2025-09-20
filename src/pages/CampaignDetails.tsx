@@ -127,7 +127,7 @@ export default function CampaignDetails() {
       
       const imageUrl = campaign?.image;
       if(imageUrl){
-        const response = await fetch("http://localhost:3000/delete",{
+        const response = await fetch("https://s3-practice-1.onrender.com/delete",{
           method:"POST",
           headers:{
             'Content-type':"application/json"
